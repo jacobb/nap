@@ -1,4 +1,5 @@
-*.log
 *.pot
 *.pyc
-local_settings.py
+.coveragerc
+_build
+__pycache__
