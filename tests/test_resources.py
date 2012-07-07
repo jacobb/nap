@@ -14,3 +14,10 @@ class TestDataModels(object):
 
         assert dm.x == 'a'
         assert dm.y == 'b'
+        assert len(dm.extra_data) == 0
+
+    def test_extra_data(self):
+
+        dm = SampleDataModel(x='a', y='b', z='c')
+
+        assert dm.extra_data['z'] == 'c'
