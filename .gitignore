@@ -1,5 +1,7 @@
 *.pot
 *.pyc
 .coveragerc
+.coverage
+htmlcov
 _build
 __pycache__

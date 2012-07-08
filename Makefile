@@ -5,6 +5,6 @@ test:
 	py.test
 
 coverage:
-	py.test --cov login_service --cov-report html
+	py.test --cov nap --cov-report html
 
 .PHONY: build watch
