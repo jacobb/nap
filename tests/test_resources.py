@@ -1,23 +1,52 @@
-from nap import resources
+import mock
+
+import nap
 
 
-class SampleDataModel(resources.DataModel):
-    x = resources.Field()
-    y = resources.Field()
+class SampleDataModel(nap.DataModel):
+    title = nap.Field()
+    content = nap.Field()
+
+expected_note_output = {
+    "content": "hello",
+    "id": "75",
+    "resource_uri": "/api/v1/note/75/",
+    "title": "a title",
+    "when": "2012-07-08T22:02:49.712163"
+}
 
 
 class TestDataModels(object):
 
     def test_mapping_to_fields(self):
 
-        dm = SampleDataModel(x='a', y='b')
+        dm = SampleDataModel(title='a', content='b')
 
-        assert dm.x == 'a'
-        assert dm.y == 'b'
+        assert dm.title == 'a'
+        assert dm.content == 'b'
         assert len(dm.extra_data) == 0
 
     def test_extra_data(self):
 
-        dm = SampleDataModel(x='a', y='b', z='c')
+        dm = SampleDataModel(title='a', note='b', z='c')
 
         assert dm.extra_data['z'] == 'c'
+        assert not hasattr(dm, 'z')
+
+
+class TestManagerMethods(object):
+
+    def test_get(self):
+        api = nap.API('http://slumber.in/api/v1/', auth=('demo', 'demo'))
+        with mock.patch('slumber.Resource.post') as slumber_post:
+            slumber_post.return_value = expected_note_output
+            note_dict = api.note.post({'title': 'a title', 'content': 'hello'})
+        note_id = note_dict['id']
+        api.register_resource(SampleDataModel, 'note')
+        with mock.patch('slumber.Resource.get') as slumber_get:
+            slumber_get.return_value = expected_note_output
+            note = api.note(note_id).get()
+
+        assert note.title == 'a title'
+        assert note.content == 'hello'
+        assert note.extra_data['id'] == u'75'
