@@ -6,12 +6,14 @@ import nap
 class SampleDataModel(nap.DataModel):
     title = nap.Field()
     content = nap.Field()
+    alt_name = nap.Field(api_name='some_field')
 
 expected_note_output = {
     "content": "hello",
     "id": "75",
     "resource_uri": "/api/v1/note/75/",
     "title": "a title",
+    "some_field": "some field",
     "when": "2012-07-08T22:02:49.712163"
 }
 
@@ -32,6 +34,11 @@ class TestDataModels(object):
 
         assert dm.extra_data['z'] == 'c'
         assert not hasattr(dm, 'z')
+
+    def test_api_name(self):
+        dm = SampleDataModel(title='a', note='b', some_field='c')
+
+        assert dm.alt_name == 'c'
 
 
 class TestManagerMethods(object):

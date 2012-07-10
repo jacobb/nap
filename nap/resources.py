@@ -25,12 +25,18 @@ class DataModel(object):
     def __init__(self, *args, **kwargs):
 
         self.extra_data = {}
+        obj_name_api_name_map = dict([
+            (field.api_name or name, name)
+            for (name, field) in self.fields.iteritems()
+        ])
         for name, value in kwargs.iteritems():
-            if name in self.fields:
-                setattr(self, name, value)
+            if name in obj_name_api_name_map:
+                setattr(self, obj_name_api_name_map[name], value)
             else:
                 self.extra_data[name] = value
 
 
 class Field(object):
-    pass
+
+    def __init__(self, api_name=None):
+        self.api_name = api_name
