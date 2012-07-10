@@ -8,6 +8,15 @@ class DataModelMetaClass(type):
 
         model_cls = super_new(cls, name, bases, attrs)
         fields = {}
+
+        options = attrs.pop('Meta', None)
+        model_name = getattr(options, 'name', model_cls.__name__.lower())
+
+        _meta = {
+            'name': model_name
+        }
+
+        setattr(model_cls, '_meta', _meta)
         for name, attr in attrs.iteritems():
             if isinstance(attr, Field):
                 attr._name = name

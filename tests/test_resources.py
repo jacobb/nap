@@ -40,6 +40,16 @@ class TestDataModels(object):
 
         assert dm.alt_name == 'c'
 
+    def test_meta_attached(self):
+
+        class SampleMetaDataModel(nap.DataModel):
+            class Meta:
+                name = 'bob'
+
+        dm = SampleMetaDataModel()
+
+        assert dm._meta['name'] == 'bob'
+
 
 class TestManagerMethods(object):
 

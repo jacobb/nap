@@ -32,7 +32,9 @@ class NapMixin(object):
 
 class API(NapMixin, slumber_API):
 
-    def register_resource(self, resource_cls, name):
+    def register_resource(self, resource_cls, name=None):
+        if not name:
+            name = resource_cls._meta.name
         self.resource_registry[name] = resource_cls
 
 
