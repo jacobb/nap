@@ -8,6 +8,9 @@ class SampleDataModel(nap.DataModel):
     content = nap.Field()
     alt_name = nap.Field(api_name='some_field')
 
+    class Meta:
+        root_url = "http://foo.com/v1/"
+
 expected_note_output = {
     "content": "hello",
     "id": "75",
@@ -45,10 +48,18 @@ class TestDataModels(object):
         class SampleMetaDataModel(nap.DataModel):
             class Meta:
                 name = 'bob'
+                root_url = "http://foo.com/v1/"
 
         dm = SampleMetaDataModel()
 
         assert dm._meta['name'] == 'bob'
+        assert dm._meta['root_url'] == "http://foo.com/v1/"
+
+    def test_override_root_url(self):
+
+        different_url = "http://www.differenturl.com/v1/"
+        dm = SampleDataModel(root_url=different_url)
+        assert dm._root_url == different_url
 
 
 class TestManagerMethods(object):

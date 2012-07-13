@@ -23,6 +23,7 @@ class NapMixin(object):
             default_kwargs = {
                 "resource_cls": self.resource_registry[item],
                 "resource_registry": self.resource_registry,
+                'root_url': self._store['root_url']
             }
             kwargs.update(default_kwargs)
             return NapResource(**kwargs)
@@ -31,6 +32,10 @@ class NapMixin(object):
 
 
 class API(NapMixin, slumber_API):
+
+    def __init__(self, *args, **kwargs):
+        super(API, self).__init__(*args, **kwargs)
+        self._store['root_url'] = kwargs.get('base_url', None)
 
     def register_resource(self, resource_cls, name=None):
         if not name:
