@@ -1,3 +1,8 @@
+import json
+
+import requests
+
+
 class DataModelMetaClass(type):
 
     def __new__(cls, name, bases, attrs):
@@ -28,7 +33,7 @@ class DataModelMetaClass(type):
         return model_cls
 
 
-class DataModel(object):
+class RemoteModel(object):
 
     __metaclass__ = DataModelMetaClass
 
@@ -49,6 +54,46 @@ class DataModel(object):
                 setattr(self, obj_name_api_name_map[name], value)
             else:
                 self.extra_data[name] = value
+
+    @property
+    def full_url(self):
+        if hasattr(self, '_full_url'):
+            return self._full_url
+
+    # access methods
+    @classmethod
+    def get(cls, uri):
+
+        try:
+            root_url = cls._meta['root_url']
+        except KeyError:
+            raise ValueError("`get` requires root_url to be defined")
+        resource_url = "%s%s" % (root_url, uri)
+
+        resource_response = requests.get(resource_url)
+        try:
+            resource_data = json.loads(resource_response.content)
+        except ValueError:
+            raise
+
+        resource_data['root_url'] = root_url
+        resource_obj = cls(**resource_data)
+        resource_obj._full_url = resource_url
+
+        return resource_obj
+
+    def lookup(self, *args, **kwargs):
+        pass
+
+    # write methods
+    def save(self):
+        pass
+
+    def update(self):
+        pass
+
+    def create(self):
+        pass
 
 
 class Field(object):
