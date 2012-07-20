@@ -1,4 +1,5 @@
 import json
+import unittest
 
 import nap
 
@@ -119,9 +120,12 @@ class TestToJson(object):
         assert obj_dict['alt_name'] == None
 
 
-class TestRemoteModelWriteMethods(object):
+class TestRemoteModelWriteMethods(unittest.TestCase):
 
     headers = {'content-type': 'application/json'}
+
+    def tearDown(self):
+        SampleRemoteModel._lookup_urls = []
 
     def test_write_url(self):
 
@@ -187,7 +191,7 @@ class TestRemoteModelWriteMethods(object):
         with mock.patch('requests.post') as post:
             dm._full_url = 'http://foo.com/v1/random_title/'
             dm.create()
-            post.assert_called_with("http://foo.com/v1/random_title/",
+            post.assert_called_with("http://foo.com/v1/note/",
                 data=dm.to_json(), headers=self.headers)
         SampleRemoteModel._lookup_urls = []
 
@@ -198,6 +202,3 @@ class TestRemoteModelWriteMethods(object):
         dm = SampleRemoteModel(title='what')
         with raises(ValueError):
             dm.update()
-
-        with raises(ValueError):
-            dm.create()

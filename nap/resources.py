@@ -168,7 +168,7 @@ class RemoteModel(object):
     def create(self, **kwargs):
 
         headers = {'content-type': 'application/json'}
-        r = requests.post(self.get_update_url(),
+        r = requests.post(self.get_create_url(),
             data=self.to_json(),
             headers=headers)
         return r
