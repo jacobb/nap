@@ -67,3 +67,22 @@ class TestRemoteModelAccessMethods(object):
             assert obj.content == fake_dict['content']
             assert obj._root_url == model_root_url
             assert obj._full_url == "%s%s" % (model_root_url, 'xyz')
+
+    def test_add_lookup_url(self):
+        pattern = r'xx(?P<hello>\d*)(?P<what>.*)'
+        SampleRemoteModel.add_lookup_url(pattern)
+        SampleRemoteModel._lookup_urls[0].pattern == pattern
+        SampleRemoteModel._lookup_urls = []
+
+    def test_get_lookup_url(self):
+        pattern = r'(?P<hello>\d*)/(?P<what>.*)/'
+        SampleRemoteModel.add_lookup_url(pattern)
+        final_url, params = SampleRemoteModel.get_lookup_url(hello='1', what='2')
+        assert final_url == "1/2/"
+
+        final_url_with_params, params = SampleRemoteModel.get_lookup_url(
+            hello='1',
+            what='2',
+            extra_param='3'
+        )
+        assert params == {'extra_param': '3'}

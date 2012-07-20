@@ -2,6 +2,10 @@ import json
 
 import requests
 
+from .lookup import LookupURL
+from .utils import make_url
+from .regex_helper import normalize
+
 
 class DataModelMetaClass(type):
 
@@ -30,6 +34,7 @@ class DataModelMetaClass(type):
                 setattr(model_cls, name, attr)
 
         setattr(model_cls, 'fields', fields)
+        setattr(model_cls, '_lookup_urls', [])
         return model_cls
 
 
@@ -60,9 +65,14 @@ class RemoteModel(object):
         if hasattr(self, '_full_url'):
             return self._full_url
 
+        raise AttributeError("full_url not defined")
+
     # access methods
     @classmethod
-    def get(cls, uri):
+    def get(cls, uri, params=None):
+
+        if not params:
+            params = {}
 
         try:
             root_url = cls._meta['root_url']
@@ -82,18 +92,39 @@ class RemoteModel(object):
 
         return resource_obj
 
-    def lookup(self, *args, **kwargs):
-        pass
+    @classmethod
+    def get_lookup_url(cls, **kwargs):
+        for url in cls._lookup_urls:
+            if not set(url.required_vars) - set(kwargs.keys()):
+                extra_params = dict([
+                    item for item in kwargs.items()
+                    if item[0] not in url.required_vars
+                ])
+                resource_uri = normalize(url.pattern)[0][0] % kwargs
+                return resource_uri, extra_params
+
+        raise ValueError("valid URL for lookup variables not found")
+
+    @classmethod
+    def lookup(cls, **kwargs):
+        uri, params = cls.get_lookup_url(**kwargs)
+        return cls.get(uri, params)
 
     # write methods
-    def save(self):
+    def save(self, *args, **kwargs):
         pass
 
-    def update(self):
+    def update(self, *args, **kwargs):
         pass
 
-    def create(self):
+    def create(self, *args, **kwargs):
         pass
+
+    # meta methods
+    @classmethod
+    def add_lookup_url(cls, pattern, params=None):
+        lookup_url = LookupURL(pattern, params)
+        cls._lookup_urls.append(lookup_url)
 
 
 class Field(object):
