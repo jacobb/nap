@@ -70,10 +70,7 @@ class RemoteModel(object):
 
     @property
     def full_url(self):
-        if hasattr(self, '_full_url'):
-            return self._full_url
-
-        raise AttributeError("full_url not defined")
+        return getattr(self, '_full_url', None)
 
     # access methods
     @classmethod
@@ -130,8 +127,8 @@ class RemoteModel(object):
         """
         obj_full_url = getattr(self, '_full_url', None)
 
-        if obj_full_url:
-            return obj_full_url
+        if self.full_url:
+            return self.full_url
 
         try:
             url = self._lookup_urls[0]
@@ -153,7 +150,7 @@ class RemoteModel(object):
 
     def save(self, **kwargs):
 
-        if hasattr(self, '_full_url'):
+        if self.full_url:
             self.update(**kwargs)
         else:
             self.create(**kwargs)

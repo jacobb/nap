@@ -88,6 +88,15 @@ class TestRemoteModelAccessMethods(object):
         assert params == {'extra_param': '3'}
         SampleRemoteModel._lookup_urls = []
 
+    def test_lookup(self):
+        pattern = r'(?P<hello>\d*)/(?P<what>.*)/'
+        SampleRemoteModel.add_lookup_url(pattern)
+        with mock.patch('nap.resources.RemoteModel.get') as get:
+            SampleRemoteModel.lookup(hello='hello_test', what='what_test')
+            get.assert_called_with('hello_test/what_test/', {})
+
+        SampleRemoteModel._lookup_urls = []
+
 
 class TestToJson(object):
 
@@ -128,21 +137,25 @@ class TestRemoteModelWriteMethods(object):
             assert update.called
 
     def test_update(self):
+        SampleRemoteModel.add_lookup_url(r'(?P<title>[^/]+)/')
+        dm = SampleRemoteModel(
+            title='expected_title',
+            content='Blank Content')
         with mock.patch('requests.put') as put:
-            dm = SampleRemoteModel(
-                title='expected_title',
-                content='Blank Content')
-            pattern = r'(?P<title>[^/]+)/'
-            dm.add_lookup_url(pattern)
+
             dm.update()
             put.assert_called_with("http://foo.com/v1/expected_title/", data=dm.to_json())
-            SampleRemoteModel._lookup_urls = []
+        SampleRemoteModel._lookup_urls = []
 
     def test_create(self):
+
+        # add a lookup url to ensure it doesn't get used
+        SampleRemoteModel.add_lookup_url(r'(?P<title>[^/]+)/')
+        dm = SampleRemoteModel(
+            title='expected_title',
+            content='Blank Content')
         with mock.patch('requests.post') as post:
-            dm = SampleRemoteModel(
-                title='expected_title',
-                content='Blank Content')
-            dm._full_url = 'http://foo.com/v1/expected_title/'
+            dm._full_url = 'http://foo.com/v1/random_title/'
             dm.create()
-            post.assert_called_with("http://foo.com/v1/expected_title/", data=dm.to_json())
+            post.assert_called_with("http://foo.com/v1/random_title/", data=dm.to_json())
+        SampleRemoteModel._lookup_urls = []
