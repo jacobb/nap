@@ -78,9 +78,10 @@ class RemoteModel(object):
             root_url = cls._meta['root_url']
         except KeyError:
             raise ValueError("`get` requires root_url to be defined")
-        resource_url = "%s%s" % (root_url, uri)
+        base_url = "%s%s" % (root_url, uri)
+        full_url = make_url(base_url, params=params)
 
-        resource_response = requests.get(resource_url)
+        resource_response = requests.get(full_url)
         try:
             resource_data = json.loads(resource_response.content)
         except ValueError:
@@ -88,20 +89,21 @@ class RemoteModel(object):
 
         resource_data['root_url'] = root_url
         resource_obj = cls(**resource_data)
-        resource_obj._full_url = resource_url
+        resource_obj._full_url = full_url
 
         return resource_obj
 
     @classmethod
     def get_lookup_url(cls, **kwargs):
+        """
+        Cycle through all look up urls.
+
+        If one is a successful match with the given kwargs, return it
+        """
         for url in cls._lookup_urls:
-            if not set(url.required_vars) - set(kwargs.keys()):
-                extra_params = dict([
-                    item for item in kwargs.items()
-                    if item[0] not in url.required_vars
-                ])
-                resource_uri = normalize(url.pattern)[0][0] % kwargs
-                return resource_uri, extra_params
+            lookup_url = url.match(**kwargs)
+            if lookup_url:
+                return lookup_url
 
         raise ValueError("valid URL for lookup variables not found")
 
@@ -111,6 +113,31 @@ class RemoteModel(object):
         return cls.get(uri, params)
 
     # write methods
+
+    def get_write_url(self):
+        """
+        For the time being, save urls behave similarlly to the lookup method.
+
+        However, only the first url listed is respected
+        """
+        obj_full_url = getattr(self, '_full_url', None)
+
+        if obj_full_url:
+            return obj_full_url
+
+        try:
+            url = self._lookup_urls[0]
+        except IndexError:
+            raise ValueError("a lookup_url must be defined for write operations")
+
+        lookup_var_values = dict([
+            (var, getattr(self, var))
+            for var in url.required_vars
+        ])
+
+        if all(*lookup_var_values.values()):
+            return url.match(**lookup_var_values)
+
     def save(self, *args, **kwargs):
         pass
 

@@ -66,7 +66,7 @@ class TestRemoteModelAccessMethods(object):
             assert obj.title == fake_dict['title']
             assert obj.content == fake_dict['content']
             assert obj._root_url == model_root_url
-            assert obj._full_url == "%s%s" % (model_root_url, 'xyz')
+            assert obj._full_url == "%s%s/" % (model_root_url, 'xyz')
 
     def test_add_lookup_url(self):
         pattern = r'xx(?P<hello>\d*)(?P<what>.*)'
@@ -86,3 +86,20 @@ class TestRemoteModelAccessMethods(object):
             extra_param='3'
         )
         assert params == {'extra_param': '3'}
+        SampleRemoteModel._lookup_urls = []
+
+
+class TestRemoteModelWriteMethods(object):
+
+    def test_write_url(self):
+
+        dm = SampleRemoteModel(
+            title='expected_title',
+            content='Blank Content')
+
+        pattern = r'(?P<title>[^/]+)/'
+        dm.add_lookup_url(pattern)
+
+        url, params = dm.get_write_url()
+        assert url == u'expected_title/'
+        SampleRemoteModel._lookup_urls = []
