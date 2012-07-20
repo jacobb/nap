@@ -29,3 +29,7 @@ class LookupURL(object):
         ])
         resource_uri = normalize(self.pattern)[0][0] % kwargs
         return resource_uri, extra_params
+
+    @property
+    def is_readonly(self):
+        return False

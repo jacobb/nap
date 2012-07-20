@@ -115,30 +115,26 @@ class RemoteModel(object):
     def get_update_url(self):
         """
         For the time being, save urls behave similarlly to the lookup method.
-
-        However, only the first url listed is respected
         """
 
         if self.full_url:
             return self.full_url
 
-        try:
-            url = self._lookup_urls[0]
-        except IndexError:
-            raise ValueError("a lookup_url must be defined for write operations")
+        write_urls = [url for url in self._lookup_urls if not url.is_readonly]
 
-        lookup_var_values = dict([
-            (var, getattr(self, var))
-            for var in url.required_vars
-        ])
+        for url in write_urls:
+            lookup_var_values = dict([
+                (var, getattr(self, var))
+                for var in url.required_vars
+            ])
 
-        if all(*lookup_var_values.values()):
-            uri, params = url.match(**lookup_var_values)
+            if all(*lookup_var_values.values()):
+                uri, params = url.match(**lookup_var_values)
 
-        base_url = "%s%s" % (self._root_url, uri)
-        full_url = make_url(base_url, params=params)
+            base_url = "%s%s" % (self._root_url, uri)
+            full_url = make_url(base_url, params=params)
 
-        return full_url
+            return full_url
 
     def get_create_url(self):
         return "%s%s/" % (self._root_url, self._meta['resource_name'])
@@ -152,7 +148,8 @@ class RemoteModel(object):
 
     def save(self, **kwargs):
 
-        if self.full_url:
+        # this feels off to me, but it should work for now?
+        if self.full_url or self.get_update_url():
             self.update(**kwargs)
         else:
             self.create(**kwargs)
@@ -160,18 +157,24 @@ class RemoteModel(object):
     def update(self, **kwargs):
 
         headers = {'content-type': 'application/json'}
-        r = requests.put(self.get_update_url(),
+
+        url = self.get_update_url()
+        if not url:
+            raise ValueError('full_url or non-readonly lookup_urls required for updates')
+
+        r = requests.put(url,
             data=self.to_json(),
             headers=headers)
-        return r
+
+        if r.status in (201, 201, 204):
+            self._full_url = url
 
     def create(self, **kwargs):
 
         headers = {'content-type': 'application/json'}
-        r = requests.post(self.get_create_url(),
+        requests.post(self.get_create_url(),
             data=self.to_json(),
             headers=headers)
-        return r
 
     def to_json(self):
         obj_dict = dict([
