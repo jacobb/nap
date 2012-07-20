@@ -8,3 +8,4 @@ class SampleRemoteModel(nap.RemoteModel):
 
     class Meta:
         root_url = "http://foo.com/v1/"
+        resource_url = 'note'

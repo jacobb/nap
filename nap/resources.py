@@ -18,10 +18,10 @@ class DataModelMetaClass(type):
         fields = {}
 
         options = attrs.pop('Meta', None)
-        model_name = getattr(options, 'name', model_cls.__name__.lower())
+        resource_name = getattr(options, 'resource_name', model_cls.__name__.lower())
 
         _meta = {
-            'name': model_name,
+            'resource_name': resource_name,
             'root_url': getattr(options, 'root_url', None)
         }
 
@@ -112,14 +112,7 @@ class RemoteModel(object):
 
         raise ValueError("valid URL for lookup variables not found")
 
-    @classmethod
-    def lookup(cls, **kwargs):
-        uri, params = cls.get_lookup_url(**kwargs)
-        return cls.get(uri, params)
-
-    # write methods
-
-    def get_write_url(self):
+    def get_update_url(self):
         """
         For the time being, save urls behave similarlly to the lookup method.
 
@@ -147,6 +140,16 @@ class RemoteModel(object):
 
         return full_url
 
+    def get_create_url(self):
+        return "%s%s/" % (self._root_url, self._meta['resource_name'])
+
+    @classmethod
+    def lookup(cls, **kwargs):
+        uri, params = cls.get_lookup_url(**kwargs)
+        return cls.get(uri, params)
+
+    # write methods
+
     def save(self, **kwargs):
 
         if self.full_url:
@@ -157,7 +160,7 @@ class RemoteModel(object):
     def update(self, **kwargs):
 
         headers = {'content-type': 'application/json'}
-        r = requests.put(self.get_write_url(),
+        r = requests.put(self.get_update_url(),
             data=self.to_json(),
             headers=headers)
         return r
@@ -165,7 +168,7 @@ class RemoteModel(object):
     def create(self, **kwargs):
 
         headers = {'content-type': 'application/json'}
-        r = requests.post(self.get_write_url(),
+        r = requests.post(self.get_update_url(),
             data=self.to_json(),
             headers=headers)
         return r

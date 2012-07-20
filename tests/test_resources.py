@@ -33,12 +33,12 @@ class TestRemoteModelCreation(object):
 
         class SampleMetaDataModel(nap.RemoteModel):
             class Meta:
-                name = 'bob'
+                resource_name = 'bob'
                 root_url = "http://foo.com/v1/"
 
         dm = SampleMetaDataModel()
 
-        assert dm._meta['name'] == 'bob'
+        assert dm._meta['resource_name'] == 'bob'
         assert dm._meta['root_url'] == "http://foo.com/v1/"
 
     def test_override_root_url(self):
@@ -132,9 +132,27 @@ class TestRemoteModelWriteMethods(object):
         pattern = r'(?P<title>[^/]+)/'
         dm.add_lookup_url(pattern)
 
-        url = dm.get_write_url()
+        url = dm.get_update_url()
         assert url == u'http://foo.com/v1/expected_title/'
         SampleRemoteModel._lookup_urls = []
+
+    def test_create_url(self):
+
+        class CreateURLModel(nap.RemoteModel):
+            class Meta:
+                root_url = 'http://www.foo.com/api/'
+
+        cm = CreateURLModel()
+
+        assert cm.get_create_url() == 'http://www.foo.com/api/createurlmodel/'
+
+        class CreateURLModelTwo(nap.RemoteModel):
+            class Meta:
+                root_url = 'http://www.foo.com/api/'
+                resource_name = 'note'
+
+        cm2 = CreateURLModelTwo()
+        assert cm2.get_create_url() == 'http://www.foo.com/api/note/'
 
     def test_save(self):
         dm = SampleRemoteModel(
