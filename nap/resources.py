@@ -4,7 +4,6 @@ import requests
 
 from .lookup import LookupURL
 from .utils import make_url
-from .regex_helper import normalize
 
 
 class DataModelMetaClass(type):
@@ -139,7 +138,11 @@ class RemoteModel(object):
             return url.match(**lookup_var_values)
 
     def save(self, *args, **kwargs):
-        pass
+
+        if hasattr(self, '_full_url'):
+            self.update(*args, **kwargs)
+        else:
+            self.create(*args, **kwargs)
 
     def update(self, *args, **kwargs):
         pass

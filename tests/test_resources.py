@@ -103,3 +103,15 @@ class TestRemoteModelWriteMethods(object):
         url, params = dm.get_write_url()
         assert url == u'expected_title/'
         SampleRemoteModel._lookup_urls = []
+
+    def test_save(self):
+        dm = SampleRemoteModel(
+            title='expected_title',
+            content='Blank Content')
+        with mock.patch('nap.resources.RemoteModel.create') as create:
+            dm.save()
+            assert create.called
+        setattr(dm, '_full_url', 'http://www.foo.com/v1/1/')
+        with mock.patch('nap.resources.RemoteModel.update') as update:
+            dm.save()
+            assert update.called
