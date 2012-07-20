@@ -25,14 +25,14 @@ class DataModelMetaClass(type):
             'root_url': getattr(options, 'root_url', None)
         }
 
-        setattr(model_cls, '_meta', _meta)
         for name, attr in attrs.iteritems():
             if isinstance(attr, Field):
                 attr._name = name
                 fields[name] = attr
                 setattr(model_cls, name, attr)
 
-        setattr(model_cls, 'fields', fields)
+        _meta['fields'] = fields
+        setattr(model_cls, '_meta', _meta)
         setattr(model_cls, '_lookup_urls', [])
         return model_cls
 
@@ -44,20 +44,29 @@ class RemoteModel(object):
     def __init__(self, *args, **kwargs):
 
         class_name = self.__class__.__name__
-        self.extra_data = {}
+        model_fields = self._meta['fields']
         self._root_url = kwargs.get('root_url', self._meta['root_url'])
         if not self._root_url:
             raise ValueError("Must declare a root_url in either %s's Meta"
                             " class or as an keyword argument" % class_name)
-        obj_name_api_name_map = dict([
+        field_name_api_name_map = dict([
             (field.api_name or name, name)
-            for (name, field) in self.fields.iteritems()
+            for (name, field) in model_fields.iteritems()
         ])
-        for name, value in kwargs.iteritems():
-            if name in obj_name_api_name_map:
-                setattr(self, obj_name_api_name_map[name], value)
+
+        extra_data = set(kwargs.keys()) - set(field_name_api_name_map.keys())
+        for api_name, field_name in field_name_api_name_map.iteritems():
+            if api_name in kwargs:
+                value = kwargs[api_name]
             else:
-                self.extra_data[name] = value
+                value = model_fields[field_name].get_default()
+
+            setattr(self, field_name, value)
+
+        self.extra_data = dict([
+            (key, kwargs[key])
+            for key in extra_data
+        ])
 
     @property
     def full_url(self):
@@ -150,6 +159,14 @@ class RemoteModel(object):
     def create(self, *args, **kwargs):
         pass
 
+    def to_json(self):
+        obj_dict = dict([
+            (field_name, getattr(self, field_name))
+            for field_name in self._meta['fields'].keys()
+        ])
+        self._meta['fields'].keys()
+        return json.dumps(obj_dict)
+
     # meta methods
     @classmethod
     def add_lookup_url(cls, pattern, params=None):
@@ -159,5 +176,9 @@ class RemoteModel(object):
 
 class Field(object):
 
-    def __init__(self, api_name=None):
+    def __init__(self, api_name=None, default=None):
         self.api_name = api_name
+        self.default = default
+
+    def get_default(self):
+        return self.default

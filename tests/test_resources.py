@@ -89,6 +89,17 @@ class TestRemoteModelAccessMethods(object):
         SampleRemoteModel._lookup_urls = []
 
 
+class TestToJson(object):
+
+    def test_to_json(self):
+        dm = SampleRemoteModel(title='test title', content='test content')
+        json_string = dm.to_json()
+        obj_dict = json.loads(json_string)
+        assert obj_dict['title'] == 'test title'
+        assert obj_dict['content'] == 'test content'
+        assert obj_dict['alt_name'] == None
+
+
 class TestRemoteModelWriteMethods(object):
 
     def test_write_url(self):
