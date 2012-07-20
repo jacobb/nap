@@ -121,6 +121,8 @@ class TestToJson(object):
 
 class TestRemoteModelWriteMethods(object):
 
+    headers = {'content-type': 'application/json'}
+
     def test_write_url(self):
 
         dm = SampleRemoteModel(
@@ -152,9 +154,9 @@ class TestRemoteModelWriteMethods(object):
             title='expected_title',
             content='Blank Content')
         with mock.patch('requests.put') as put:
-
             dm.update()
-            put.assert_called_with("http://foo.com/v1/expected_title/", data=dm.to_json())
+            put.assert_called_with("http://foo.com/v1/expected_title/",
+                data=dm.to_json(), headers=self.headers)
         SampleRemoteModel._lookup_urls = []
 
     def test_create(self):
@@ -167,7 +169,8 @@ class TestRemoteModelWriteMethods(object):
         with mock.patch('requests.post') as post:
             dm._full_url = 'http://foo.com/v1/random_title/'
             dm.create()
-            post.assert_called_with("http://foo.com/v1/random_title/", data=dm.to_json())
+            post.assert_called_with("http://foo.com/v1/random_title/",
+                data=dm.to_json(), headers=self.headers)
         SampleRemoteModel._lookup_urls = []
 
     def test_write_with_no_lookup_url(self):
