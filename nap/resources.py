@@ -125,7 +125,6 @@ class RemoteModel(object):
 
         However, only the first url listed is respected
         """
-        obj_full_url = getattr(self, '_full_url', None)
 
         if self.full_url:
             return self.full_url

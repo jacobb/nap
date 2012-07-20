@@ -97,6 +97,16 @@ class TestRemoteModelAccessMethods(object):
 
         SampleRemoteModel._lookup_urls = []
 
+    def test_lookup_no_valid_urls(self):
+        from pytest import raises
+
+        pattern = r'(?P<hello>\d*)/(?P<what>.*)/'
+        SampleRemoteModel.add_lookup_url(pattern)
+        with raises(ValueError):
+            SampleRemoteModel.get_lookup_url(hello='bad_hello')
+
+        SampleRemoteModel._lookup_urls = []
+
 
 class TestToJson(object):
 
@@ -159,3 +169,14 @@ class TestRemoteModelWriteMethods(object):
             dm.create()
             post.assert_called_with("http://foo.com/v1/random_title/", data=dm.to_json())
         SampleRemoteModel._lookup_urls = []
+
+    def test_write_with_no_lookup_url(self):
+
+        from pytest import raises
+
+        dm = SampleRemoteModel(title='what')
+        with raises(ValueError):
+            dm.update()
+
+        with raises(ValueError):
+            dm.create()
