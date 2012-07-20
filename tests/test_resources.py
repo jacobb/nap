@@ -111,8 +111,8 @@ class TestRemoteModelWriteMethods(object):
         pattern = r'(?P<title>[^/]+)/'
         dm.add_lookup_url(pattern)
 
-        url, params = dm.get_write_url()
-        assert url == u'expected_title/'
+        url = dm.get_write_url()
+        assert url == u'http://foo.com/v1/expected_title/'
         SampleRemoteModel._lookup_urls = []
 
     def test_save(self):
@@ -122,7 +122,27 @@ class TestRemoteModelWriteMethods(object):
         with mock.patch('nap.resources.RemoteModel.create') as create:
             dm.save()
             assert create.called
-        setattr(dm, '_full_url', 'http://www.foo.com/v1/1/')
+        dm._full_url = 'http://www.foo.com/v1/1/'
         with mock.patch('nap.resources.RemoteModel.update') as update:
             dm.save()
             assert update.called
+
+    def test_update(self):
+        with mock.patch('requests.put') as put:
+            dm = SampleRemoteModel(
+                title='expected_title',
+                content='Blank Content')
+            pattern = r'(?P<title>[^/]+)/'
+            dm.add_lookup_url(pattern)
+            dm.update()
+            put.assert_called_with("http://foo.com/v1/expected_title/", data=dm.to_json())
+            SampleRemoteModel._lookup_urls = []
+
+    def test_create(self):
+        with mock.patch('requests.post') as post:
+            dm = SampleRemoteModel(
+                title='expected_title',
+                content='Blank Content')
+            dm._full_url = 'http://foo.com/v1/expected_title/'
+            dm.create()
+            post.assert_called_with("http://foo.com/v1/expected_title/", data=dm.to_json())

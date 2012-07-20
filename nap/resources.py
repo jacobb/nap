@@ -144,20 +144,29 @@ class RemoteModel(object):
         ])
 
         if all(*lookup_var_values.values()):
-            return url.match(**lookup_var_values)
+            uri, params = url.match(**lookup_var_values)
 
-    def save(self, *args, **kwargs):
+        base_url = "%s%s" % (self._root_url, uri)
+        full_url = make_url(base_url, params=params)
+
+        return full_url
+
+    def save(self, **kwargs):
 
         if hasattr(self, '_full_url'):
-            self.update(*args, **kwargs)
+            self.update(**kwargs)
         else:
-            self.create(*args, **kwargs)
+            self.create(**kwargs)
 
-    def update(self, *args, **kwargs):
-        pass
+    def update(self, **kwargs):
 
-    def create(self, *args, **kwargs):
-        pass
+        r = requests.put(self.get_write_url(), data=self.to_json())
+        return r
+
+    def create(self, **kwargs):
+
+        r = requests.post(self.get_write_url(), data=self.to_json())
+        return r
 
     def to_json(self):
         obj_dict = dict([
