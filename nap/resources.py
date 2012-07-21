@@ -126,10 +126,13 @@ class RemoteModel(object):
             lookup_var_values = dict([
                 (var, getattr(self, var))
                 for var in url.required_vars
+                if getattr(self, var)
             ])
 
-            if all(*lookup_var_values.values()):
+            if lookup_var_values and all(*lookup_var_values.values()):
                 uri, params = url.match(**lookup_var_values)
+            else:
+                continue
 
             base_url = "%s%s" % (self._root_url, uri)
             full_url = make_url(base_url, params=params)
@@ -166,7 +169,7 @@ class RemoteModel(object):
             data=self.to_json(),
             headers=headers)
 
-        if r.status in (201, 201, 204):
+        if r.status_code in (201, 201, 204):
             self._full_url = url
 
     def create(self, **kwargs):
