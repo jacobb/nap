@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from .lookup import LookupURL
+from .lookup import LookupURL, default_lookup_urls
 from .utils import make_url
 
 
@@ -20,11 +20,17 @@ class DataModelMetaClass(type):
         options = attrs.pop('Meta', None)
         resource_name = getattr(options, 'resource_name', model_cls.__name__.lower())
 
+        urls = getattr(options, 'urls', default_lookup_urls)
+        additional_urls = tuple(getattr(options, 'additional_urls', ()))
+        urls += additional_urls
+
         _meta = {
             'resource_name': resource_name,
-            'root_url': getattr(options, 'root_url', None)
+            'root_url': getattr(options, 'root_url', None),
+            'urls': urls,
         }
 
+        # lookup_urls = getattr(options, 'urls', [])
         for name, attr in attrs.iteritems():
             if isinstance(attr, Field):
                 attr._name = name
@@ -33,7 +39,7 @@ class DataModelMetaClass(type):
 
         _meta['fields'] = fields
         setattr(model_cls, '_meta', _meta)
-        setattr(model_cls, '_lookup_urls', [])
+        # setattr(model_cls, '_lookup_urls', lookup_urls)
         return model_cls
 
 
@@ -43,12 +49,8 @@ class RemoteModel(object):
 
     def __init__(self, *args, **kwargs):
 
-        class_name = self.__class__.__name__
         model_fields = self._meta['fields']
         self._root_url = kwargs.get('root_url', self._meta['root_url'])
-        if not self._root_url:
-            raise ValueError("Must declare a root_url in either %s's Meta"
-                            " class or as an keyword argument" % class_name)
         field_name_api_name_map = dict([
             (field.api_name or name, name)
             for (name, field) in model_fields.iteritems()
@@ -98,6 +100,45 @@ class RemoteModel(object):
 
         return resource_obj
 
+    def _generate_url(self, url_type='lookup', **kwargs):
+        """
+        Three set of varaibles to create a full URL
+
+        kwargs
+        Current object variables (?)
+        meta options
+        """
+
+        valid_urls = [
+            url for url in self._meta['urls']
+            if getattr(url, url_type, False)
+        ]
+        for url in valid_urls:
+            if isinstance(self, RemoteModel):
+                base_vars = dict([
+                    (var, getattr(self, var))
+                    for var in url.required_vars
+                    if getattr(self, var, None)
+                ])
+            else:
+                base_vars = {}
+
+            base_vars.update(kwargs)
+
+            model_keywords = {
+                'resource_name': self._meta['resource_name']
+            }
+
+            base_uri, params = url.match(precompile_vars=model_keywords, **base_vars)
+
+            if base_uri:
+                full_uri = make_url(base_uri,
+                    params=params)
+
+                return full_uri
+
+        raise ValueError("No valid url")
+
     @classmethod
     def get_lookup_url(cls, **kwargs):
         """
@@ -105,14 +146,12 @@ class RemoteModel(object):
 
         If one is a successful match with the given kwargs, return it
         """
-        for url in cls._lookup_urls:
-            lookup_url = url.match(**kwargs)
-            if lookup_url:
-                return lookup_url
+        self = cls()
+        return self._generate_url(**kwargs)
 
         raise ValueError("valid URL for lookup variables not found")
 
-    def get_update_url(self):
+    def get_update_url(self, **kwargs):
         """
         For the time being, save urls behave similarlly to the lookup method.
         """
@@ -120,32 +159,20 @@ class RemoteModel(object):
         if self.full_url:
             return self.full_url
 
-        write_urls = [url for url in self._lookup_urls if not url.is_readonly]
+        try:
+            update_uri = self._generate_url(**kwargs)
+        except ValueError:
+            update_uri = None
 
-        for url in write_urls:
-            lookup_var_values = dict([
-                (var, getattr(self, var))
-                for var in url.required_vars
-                if getattr(self, var)
-            ])
-
-            if lookup_var_values and all(*lookup_var_values.values()):
-                uri, params = url.match(**lookup_var_values)
-            else:
-                continue
-
-            base_url = "%s%s" % (self._root_url, uri)
-            full_url = make_url(base_url, params=params)
-
-            return full_url
+        return update_uri
 
     def get_create_url(self):
         return "%s%s/" % (self._root_url, self._meta['resource_name'])
 
     @classmethod
     def lookup(cls, **kwargs):
-        uri, params = cls.get_lookup_url(**kwargs)
-        return cls.get(uri, params)
+        uri = cls.get_lookup_url(**kwargs)
+        return cls.get(uri)
 
     # write methods
 
@@ -161,9 +188,11 @@ class RemoteModel(object):
 
         headers = {'content-type': 'application/json'}
 
-        url = self.get_update_url()
-        if not url:
+        uri = self.get_update_url()
+        if not uri:
             raise ValueError('full_url or non-readonly lookup_urls required for updates')
+
+        url = "%s%s" % (self._root_url, self.get_update_url())
 
         r = requests.put(url,
             data=self.to_json(),
@@ -187,18 +216,13 @@ class RemoteModel(object):
         self._meta['fields'].keys()
         return json.dumps(obj_dict)
 
-    # meta methods
-    @classmethod
-    def add_lookup_url(cls, pattern, params=None):
-        lookup_url = LookupURL(pattern, params)
-        cls._lookup_urls.append(lookup_url)
-
 
 class Field(object):
 
-    def __init__(self, api_name=None, default=None):
+    def __init__(self, api_name=None, default=None, resource_id=False):
         self.api_name = api_name
         self.default = default
+        self.resource_id = resource_id
 
     def get_default(self):
         return self.default
