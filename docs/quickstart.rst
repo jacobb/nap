@@ -41,20 +41,21 @@ Step Two: Access your api
 
     # GET http://127.0.0.1:8000/api/note/1/
     n = Note.lookup(pk=1)
-    n.title = "butterflies"
+    n.title = "New Title"
     n.content = "I sure do love butterflies"
+
     # PUT http://127.0.0.1:8000/api/note/1/
     n.save()
 
     n = Note.get('note/1/')
-    n.title
     # "New Title"
+    n.title
+
 
 Step Three: Set up custom lookup_urls
 =====================================
 
 .. code-block:: python
-    :emphasize-lines: 2,13-15
 
     from nap.resources import ResourceModel, Field
     from nap.lookup import nap_url
@@ -73,11 +74,6 @@ Step Three: Set up custom lookup_urls
             )
 
     # GET http://127.0.0.1:8000/api/note/title/butterflies/
-    n = Note.lookup(title='butterflies')
+    n = Note.lookup(title='New Title')
     # "I sure do love butterflies"
     n.content
-
-Step Four
-=========
-
-Coming soon...
