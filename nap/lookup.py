@@ -44,10 +44,6 @@ class LookupURL(object):
         resource_uri = normalize(pattern)[0][0] % kwargs
         return resource_uri, extra_params
 
-    @property
-    def is_readonly(self):
-        return False
-
 
 def nap_url(*args, **kwargs):
     return LookupURL(*args, **kwargs)
