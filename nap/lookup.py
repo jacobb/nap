@@ -8,7 +8,12 @@ from .regex_helper import normalize
 
 class LookupURL(object):
 
-    def __init__(self, pattern, params=None, lookup=True, update=False, create=False, collection=False):
+    def __init__(self, pattern, params=None,
+            lookup=True, update=False, create=False, collection=False):
+        """
+        Setup necesary URL meta options
+        """
+
         self.pattern = pattern
         if params is None:
             params = []
@@ -51,7 +56,4 @@ def nap_url(*args, **kwargs):
 default_lookup_urls = (
     nap_url(r'%(resource_name)s/', create=True, lookup=False),
     nap_url(r'%(resource_name)s/(?P<resource_id>[^/]+)', update=True),
-    # nap_url(r'%{resource_name}s/'),
-    # nap_url(r'%{resource_name}s/'),
-    # nap_url(r'%{resource_name}s/'),
 )

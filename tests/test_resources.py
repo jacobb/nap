@@ -60,14 +60,18 @@ class TestRemoteModelAccessMethods(object):
         with mock.patch('requests.get') as get:
             stubbed_response = mock.Mock()
             stubbed_response.content = json.dumps(fake_dict)
+
+            model_root_url = SampleRemoteModel._meta['root_url']
+            expected_url = "%s%s/" % (model_root_url, 'xyz')
+            stubbed_response.url = expected_url
+
             get.return_value = stubbed_response
             obj = SampleRemoteModel.get('xyz')
 
-            model_root_url = SampleRemoteModel._meta['root_url']
             assert obj.title == fake_dict['title']
             assert obj.content == fake_dict['content']
             assert obj._root_url == model_root_url
-            assert obj._full_url == "%s%s/" % (model_root_url, 'xyz')
+            assert obj._full_url == expected_url
 
     def test_get_lookup_url(self):
         final_uri = SampleRemoteModel.get_lookup_url(hello='1', what='2')
@@ -133,7 +137,7 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
 
         cm = CreateURLModel()
 
-        assert cm.get_create_url() == 'http://www.foo.com/api/createurlmodel/'
+        assert cm.get_create_url() == 'createurlmodel/'
 
         class CreateURLModelTwo(nap.RemoteModel):
             class Meta:
@@ -141,7 +145,7 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
                 resource_name = 'note'
 
         cm2 = CreateURLModelTwo()
-        assert cm2.get_create_url() == 'http://www.foo.com/api/note/'
+        assert cm2.get_create_url() == 'note/'
 
     def test_save(self):
         dm = SampleRemoteModel(

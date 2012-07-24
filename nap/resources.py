@@ -18,7 +18,8 @@ class DataModelMetaClass(type):
         fields = {}
 
         options = attrs.pop('Meta', None)
-        resource_name = getattr(options, 'resource_name', model_cls.__name__.lower())
+        default_name = model_cls.__name__.lower()
+        resource_name = getattr(options, 'resource_name', default_name)
 
         urls = getattr(options, 'urls', default_lookup_urls)
         additional_urls = tuple(getattr(options, 'additional_urls', ()))
@@ -52,71 +53,30 @@ class RemoteModel(object):
     __metaclass__ = DataModelMetaClass
 
     def __init__(self, *args, **kwargs):
+        self._root_url = kwargs.get('root_url', self._meta['root_url'])
+        self.update_fields(kwargs)
+
+    def update_fields(self, field_data):
 
         model_fields = self._meta['fields']
-        self._root_url = kwargs.get('root_url', self._meta['root_url'])
-        field_name_api_name_map = dict([
+        api_name_map = dict([
             (field.api_name or name, name)
             for (name, field) in model_fields.iteritems()
         ])
 
-        extra_data = set(kwargs.keys()) - set(field_name_api_name_map.keys())
-        for api_name, field_name in field_name_api_name_map.iteritems():
-            if api_name in kwargs:
-                value = kwargs[api_name]
+        extra_data = set(field_data.keys()) - set(api_name_map.keys())
+        for api_name, field_name in api_name_map.iteritems():
+            if api_name in field_data:
+                value = field_data[api_name]
             else:
                 value = model_fields[field_name].get_default()
 
             setattr(self, field_name, value)
 
         self.extra_data = dict([
-            (key, kwargs[key])
+            (key, field_data[key])
             for key in extra_data
         ])
-
-    @property
-    def full_url(self):
-        return getattr(self, '_full_url', None)
-
-    @property
-    def resource_id(self):
-        if not self._meta['resource_id_field_name']:
-            raise ValueError("No field for resource_id defined")
-        id_field_name = self._meta['resource_id_field_name']
-        return getattr(self, id_field_name)
-
-    @resource_id.setter
-    def resource_id(self, resource_id_value):
-        if not self._meta['resource_id_field_name']:
-            raise ValueError("No field for resource_id defined")
-        id_field_name = self._meta['resource_id_field_name']
-        setattr(self, id_field_name, resource_id_value)
-
-    # access methods
-    @classmethod
-    def get(cls, uri, params=None):
-
-        if not params:
-            params = {}
-
-        try:
-            root_url = cls._meta['root_url']
-        except KeyError:
-            raise ValueError("`get` requires root_url to be defined")
-        base_url = "%s%s" % (root_url, uri)
-        full_url = make_url(base_url, params=params)
-
-        resource_response = requests.get(full_url)
-        try:
-            resource_data = json.loads(resource_response.content)
-        except ValueError:
-            raise
-
-        resource_data['root_url'] = root_url
-        resource_obj = cls(**resource_data)
-        resource_obj._full_url = full_url
-
-        return resource_obj
 
     def _generate_url(self, url_type='lookup', **kwargs):
         """
@@ -147,7 +107,9 @@ class RemoteModel(object):
                 'resource_name': self._meta['resource_name']
             }
 
-            base_uri, params = url.match(precompile_vars=model_keywords, **base_vars)
+            base_uri, params = url.match(
+                precompile_vars=model_keywords,
+                **base_vars)
 
             if base_uri:
                 full_uri = make_url(base_uri,
@@ -156,6 +118,41 @@ class RemoteModel(object):
                 return full_uri
 
         raise ValueError("No valid url")
+
+    def _request(self, url, request_func, *args, **kwargs):
+
+        try:
+            root_url = self._meta['root_url']
+        except KeyError:
+            raise ValueError("`get` requires root_url to be defined")
+        full_url = "%s%s" % (root_url, url)
+
+        resource_response = request_func(full_url, *args, **kwargs)
+
+        return resource_response
+
+    # access methods
+    @classmethod
+    def get(cls, url, *args, **kwargs):
+
+        self = cls()
+
+        try:
+            root_url = cls._meta['root_url']
+        except KeyError:
+            raise ValueError("`get` requires root_url to be defined")
+
+        resource_response = self._request(url, requests.get, *args, **kwargs)
+        try:
+            resource_data = json.loads(resource_response.content)
+        except ValueError:
+            raise
+
+        resource_data['root_url'] = root_url
+        resource_obj = cls(**resource_data)
+        resource_obj._full_url = resource_response.url
+
+        return resource_obj
 
     @classmethod
     def get_lookup_url(cls, **kwargs):
@@ -178,14 +175,14 @@ class RemoteModel(object):
             return self.full_url
 
         try:
-            update_uri = self._generate_url(**kwargs)
+            update_uri = self._generate_url(url_type='update', **kwargs)
         except ValueError:
             update_uri = None
 
         return update_uri
 
-    def get_create_url(self):
-        return "%s%s/" % (self._root_url, self._meta['resource_name'])
+    def get_create_url(self, **kwargs):
+        return self._generate_url(url_type='create', **kwargs)
 
     @classmethod
     def lookup(cls, **kwargs):
@@ -193,7 +190,6 @@ class RemoteModel(object):
         return cls.get(uri)
 
     # write methods
-
     def save(self, **kwargs):
 
         # this feels off to me, but it should work for now?
@@ -206,23 +202,26 @@ class RemoteModel(object):
 
         headers = {'content-type': 'application/json'}
 
-        uri = self.get_update_url()
-        if not uri:
+        url = self.get_update_url()
+        if not url:
             raise ValueError('full_url or non-readonly lookup_urls required for updates')
-
-        url = "%s%s" % (self._root_url, self.get_update_url())
 
         r = requests.put(url,
             data=self.to_json(),
             headers=headers)
 
-        if r.status_code in (201, 201, 204):
+        r = self._request(url, requests.put,
+            data=self.to_json(),
+            headers=headers)
+
+        if r.status_code in (200, 201, 204):
             self._full_url = url
 
     def create(self, **kwargs):
 
         headers = {'content-type': 'application/json'}
-        requests.post(self.get_create_url(),
+
+        self._request(self.get_create_url(), requests.post,
             data=self.to_json(),
             headers=headers)
 
@@ -233,6 +232,25 @@ class RemoteModel(object):
         ])
         self._meta['fields'].keys()
         return json.dumps(obj_dict)
+
+    # properties
+    @property
+    def full_url(self):
+        return getattr(self, '_full_url', None)
+
+    @property
+    def resource_id(self):
+        if not self._meta['resource_id_field_name']:
+            raise ValueError("No field for resource_id defined")
+        id_field_name = self._meta['resource_id_field_name']
+        return getattr(self, id_field_name)
+
+    @resource_id.setter
+    def resource_id(self, resource_id_value):
+        if not self._meta['resource_id_field_name']:
+            raise ValueError("No field for resource_id defined")
+        id_field_name = self._meta['resource_id_field_name']
+        setattr(self, id_field_name, resource_id_value)
 
 
 class Field(object):
