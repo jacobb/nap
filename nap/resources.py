@@ -112,10 +112,7 @@ class RemoteModel(object):
                 **base_vars)
 
             if base_uri:
-                full_uri = make_url(base_uri,
-                    params=params)
-
-                return full_uri
+                return base_uri, params
 
         raise ValueError("No valid url")
 
@@ -131,29 +128,7 @@ class RemoteModel(object):
 
         return resource_response
 
-    # access methods
-    @classmethod
-    def get(cls, url, *args, **kwargs):
-
-        self = cls()
-
-        try:
-            root_url = cls._meta['root_url']
-        except KeyError:
-            raise ValueError("`get` requires root_url to be defined")
-
-        resource_response = self._request(url, requests.get, *args, **kwargs)
-        try:
-            resource_data = json.loads(resource_response.content)
-        except ValueError:
-            raise
-
-        resource_data['root_url'] = root_url
-        resource_obj = cls(**resource_data)
-        resource_obj._full_url = resource_response.url
-
-        return resource_obj
-
+    # url methods
     @classmethod
     def get_lookup_url(cls, **kwargs):
         """
@@ -184,25 +159,37 @@ class RemoteModel(object):
     def get_create_url(self, **kwargs):
         return self._generate_url(url_type='create', **kwargs)
 
+    # access methods
+    @classmethod
+    def get(cls, url, *args, **kwargs):
+        self = cls()
+
+        try:
+            root_url = cls._meta['root_url']
+        except KeyError:
+            raise ValueError("`get` requires root_url to be defined")
+
+        resource_response = self._request(url, requests.get, *args, **kwargs)
+        try:
+            resource_data = json.loads(resource_response.content)
+        except ValueError:
+            raise
+
+        resource_data['root_url'] = root_url
+        resource_obj = cls(**resource_data)
+        resource_obj._full_url = resource_response.url
+
+        return resource_obj
+
     @classmethod
     def lookup(cls, **kwargs):
-        uri = cls.get_lookup_url(**kwargs)
-        return cls.get(uri)
-
-    # write methods
-    def save(self, **kwargs):
-
-        # this feels off to me, but it should work for now?
-        if self.full_url or self.get_update_url():
-            self.update(**kwargs)
-        else:
-            self.create(**kwargs)
+        url, params = cls.get_lookup_url(**kwargs)
+        return cls.get(url, params=params)
 
     def update(self, **kwargs):
-
         headers = {'content-type': 'application/json'}
 
-        url = self.get_update_url()
+        url, params = self.get_update_url()
         if not url:
             raise ValueError('full_url or non-readonly lookup_urls required for updates')
 
@@ -212,19 +199,28 @@ class RemoteModel(object):
 
         r = self._request(url, requests.put,
             data=self.to_json(),
-            headers=headers)
+            headers=headers,
+            params=params)
 
         if r.status_code in (200, 201, 204):
             self._full_url = url
 
     def create(self, **kwargs):
-
         headers = {'content-type': 'application/json'}
 
         self._request(self.get_create_url(), requests.post,
             data=self.to_json(),
             headers=headers)
 
+    # write methods
+    def save(self, **kwargs):
+        # this feels off to me, but it should work for now?
+        if self.full_url or self.get_update_url():
+            self.update(**kwargs)
+        else:
+            self.create(**kwargs)
+
+    # utility methods
     def to_json(self):
         obj_dict = dict([
             (field_name, getattr(self, field_name))
