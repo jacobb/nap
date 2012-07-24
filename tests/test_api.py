@@ -1,7 +1,7 @@
 import mock
 
 import nap
-from . import SampleRemoteModel
+from . import SampleResourceModel
 
 
 expected_note_output = {
@@ -22,7 +22,7 @@ class TestManagerMethods(object):
             slumber_post.return_value = expected_note_output
             note_dict = api.note.post({'title': 'a title', 'content': 'hello'})
         note_id = note_dict['id']
-        api.register_resource(SampleRemoteModel, 'note')
+        api.register_resource(SampleResourceModel, 'note')
         with mock.patch('slumber.Resource.get') as slumber_get:
             slumber_get.return_value = expected_note_output
             note = api.note(note_id).get()

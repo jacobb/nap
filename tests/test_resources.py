@@ -5,14 +5,14 @@ import nap
 
 import mock
 
-from . import SampleRemoteModel
+from . import SampleResourceModel
 
 
-class TestRemoteModelCreation(object):
+class TestResourceModelCreation(object):
 
     def test_mapping_to_fields(self):
 
-        dm = SampleRemoteModel(title='a', content='b')
+        dm = SampleResourceModel(title='a', content='b')
 
         assert dm.title == 'a'
         assert dm.content == 'b'
@@ -20,19 +20,19 @@ class TestRemoteModelCreation(object):
 
     def test_extra_data(self):
 
-        dm = SampleRemoteModel(title='a', note='b', z='c')
+        dm = SampleResourceModel(title='a', note='b', z='c')
 
         assert dm.extra_data['z'] == 'c'
         assert not hasattr(dm, 'z')
 
     def test_api_name(self):
-        dm = SampleRemoteModel(title='a', note='b', some_field='c')
+        dm = SampleResourceModel(title='a', note='b', some_field='c')
 
         assert dm.alt_name == 'c'
 
     def test_meta_attached(self):
 
-        class SampleMetaDataModel(nap.RemoteModel):
+        class SampleMetaDataModel(nap.ResourceModel):
             class Meta:
                 resource_name = 'bob'
                 root_url = "http://foo.com/v1/"
@@ -45,11 +45,11 @@ class TestRemoteModelCreation(object):
     def test_override_root_url(self):
 
         different_url = "http://www.differenturl.com/v1/"
-        dm = SampleRemoteModel(root_url=different_url)
+        dm = SampleResourceModel(root_url=different_url)
         assert dm._root_url == different_url
 
 
-class TestRemoteModelAccessMethods(object):
+class TestResourceModelAccessMethods(object):
 
     def test_get(self):
 
@@ -61,12 +61,12 @@ class TestRemoteModelAccessMethods(object):
             stubbed_response = mock.Mock()
             stubbed_response.content = json.dumps(fake_dict)
 
-            model_root_url = SampleRemoteModel._meta['root_url']
+            model_root_url = SampleResourceModel._meta['root_url']
             expected_url = "%s%s/" % (model_root_url, 'xyz')
             stubbed_response.url = expected_url
 
             get.return_value = stubbed_response
-            obj = SampleRemoteModel.get('xyz')
+            obj = SampleResourceModel.get('xyz')
 
             assert obj.title == fake_dict['title']
             assert obj.content == fake_dict['content']
@@ -74,37 +74,37 @@ class TestRemoteModelAccessMethods(object):
             assert obj._full_url == expected_url
 
     def test_get_lookup_url(self):
-        final_uri = SampleRemoteModel.get_lookup_url(hello='1', what='2')
+        final_uri = SampleResourceModel.get_lookup_url(hello='1', what='2')
         assert final_uri == "1/2/"
 
-        final_uri_with_params = SampleRemoteModel.get_lookup_url(
+        final_uri_with_params = SampleResourceModel.get_lookup_url(
             hello='1',
             what='2',
             extra_param='3'
         )
         assert final_uri_with_params == '1/2/?extra_param=3'
         # assert params == {'extra_param': '3'}
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
     def test_lookup(self):
-        with mock.patch('nap.resources.RemoteModel.get') as get:
-            SampleRemoteModel.lookup(hello='hello_test', what='what_test')
+        with mock.patch('nap.resources.ResourceModel.get') as get:
+            SampleResourceModel.lookup(hello='hello_test', what='what_test')
             get.assert_called_with('hello_test/what_test/')
 
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
     def test_lookup_no_valid_urls(self):
         from pytest import raises
         with raises(ValueError):
-            SampleRemoteModel.get_lookup_url(hello='bad_hello')
+            SampleResourceModel.get_lookup_url(hello='bad_hello')
 
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
 
 class TestToJson(object):
 
     def test_to_json(self):
-        dm = SampleRemoteModel(title='test title', content='test content')
+        dm = SampleResourceModel(title='test title', content='test content')
         json_string = dm.to_json()
         obj_dict = json.loads(json_string)
         assert obj_dict['title'] == 'test title'
@@ -112,26 +112,26 @@ class TestToJson(object):
         assert obj_dict['alt_name'] == None
 
 
-class TestRemoteModelWriteMethods(unittest.TestCase):
+class TestResourceModelWriteMethods(unittest.TestCase):
 
     headers = {'content-type': 'application/json'}
 
     def tearDown(self):
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
     def dont_test_write_url(self):
 
-        dm = SampleRemoteModel(
+        dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content')
 
         url = dm.get_update_url()
         assert url == u'expected_title/'
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
     def test_create_url(self):
 
-        class CreateURLModel(nap.RemoteModel):
+        class CreateURLModel(nap.ResourceModel):
             class Meta:
                 root_url = 'http://www.foo.com/api/'
 
@@ -139,7 +139,7 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
 
         assert cm.get_create_url() == 'createurlmodel/'
 
-        class CreateURLModelTwo(nap.RemoteModel):
+        class CreateURLModelTwo(nap.ResourceModel):
             class Meta:
                 root_url = 'http://www.foo.com/api/'
                 resource_name = 'note'
@@ -148,31 +148,31 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
         assert cm2.get_create_url() == 'note/'
 
     def test_save(self):
-        dm = SampleRemoteModel(
+        dm = SampleResourceModel(
             title=None,
             content='Blank Content')
-        with mock.patch('nap.resources.RemoteModel.create') as create:
+        with mock.patch('nap.resources.ResourceModel.create') as create:
             dm.save()
             assert create.called
         dm._full_url = 'http://www.foo.com/v1/1/'
-        with mock.patch('nap.resources.RemoteModel.update') as update:
+        with mock.patch('nap.resources.ResourceModel.update') as update:
             dm.save()
             assert update.called
 
     def test_update(self):
-        dm = SampleRemoteModel(
+        dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content')
         with mock.patch('requests.put') as put:
             dm.update()
             put.assert_called_with("http://foo.com/v1/expected_title/",
                 data=dm.to_json(), headers=self.headers)
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
     def test_create(self):
 
         # add a lookup url to ensure it doesn't get used
-        dm = SampleRemoteModel(
+        dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content')
         with mock.patch('requests.post') as post:
@@ -180,13 +180,13 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
             dm.create()
             post.assert_called_with("http://foo.com/v1/note/",
                 data=dm.to_json(), headers=self.headers)
-        SampleRemoteModel._lookup_urls = []
+        SampleResourceModel._lookup_urls = []
 
     def test_write_with_no_lookup_url(self):
 
         from pytest import raises
 
-        dm = SampleRemoteModel(content='what')
+        dm = SampleResourceModel(content='what')
         with raises(ValueError):
             dm.update()
 
@@ -194,7 +194,7 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
 class TestResourceID(object):
 
     def test_resource_id_get(self):
-        dm = SampleRemoteModel(
+        dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content',
             slug='some-slug')
@@ -202,7 +202,7 @@ class TestResourceID(object):
         assert dm.resource_id == 'some-slug'
 
     def test_resource_id_set(self):
-        dm = SampleRemoteModel(
+        dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content',
             slug='some-slug')

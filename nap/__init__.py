@@ -1,4 +1,4 @@
-from .resources import RemoteModel, Field
+from .resources import ResourceModel, Field
 from .api import API
 
-__all__ = (RemoteModel, Field, API)
+__all__ = (ResourceModel, Field, API)

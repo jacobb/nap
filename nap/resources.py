@@ -46,7 +46,7 @@ class DataModelMetaClass(type):
         return model_cls
 
 
-class RemoteModel(object):
+class ResourceModel(object):
 
     __metaclass__ = DataModelMetaClass
 
@@ -90,7 +90,7 @@ class RemoteModel(object):
             if getattr(url, url_type, False)
         ]
         for url in valid_urls:
-            if isinstance(self, RemoteModel):
+            if isinstance(self, ResourceModel):
                 base_vars = dict([
                     (var, getattr(self, var))
                     for var in url.required_vars

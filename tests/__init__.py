@@ -1,7 +1,7 @@
 import nap
 
 
-class SampleRemoteModel(nap.RemoteModel):
+class SampleResourceModel(nap.ResourceModel):
     title = nap.Field()
     content = nap.Field()
     slug = nap.Field(resource_id=True)

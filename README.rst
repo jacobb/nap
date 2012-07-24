@@ -11,10 +11,10 @@ Step One: Declare your resource
 ..  code-block:: python
 
     # note/client.py
-    from nap.resources import RemoteModel, Field
+    from nap.resources import ResourceModel, Field
 
 
-    class Note(RemoteModel):
+    class Note(ResourceModel):
 
         pk = Field(api_name='id', resource_id=True)
         title = Field()
@@ -57,10 +57,10 @@ Step Three: Set up custom lookup_urls
 
 .. code-block:: python
 
-    from nap.resources import RemoteModel, Field
+    from nap.resources import ResourceModel, Field
     from nap.lookup import nap_url
 
-    class Note(RemoteModel):
+    class Note(ResourceModel):
 
         pk = Field(api_name='id', resource_id=True)
         title = Field()
