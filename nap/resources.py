@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from .lookup import LookupURL, default_lookup_urls
+from .lookup import default_lookup_urls
 from .utils import make_url
 
 
@@ -28,6 +28,7 @@ class DataModelMetaClass(type):
             'resource_name': resource_name,
             'root_url': getattr(options, 'root_url', None),
             'urls': urls,
+            'resource_id_field_name': None
         }
 
         # lookup_urls = getattr(options, 'urls', [])
@@ -36,6 +37,9 @@ class DataModelMetaClass(type):
                 attr._name = name
                 fields[name] = attr
                 setattr(model_cls, name, attr)
+
+                if attr.resource_id:
+                    _meta['resource_id_field_name'] = name
 
         _meta['fields'] = fields
         setattr(model_cls, '_meta', _meta)
@@ -73,6 +77,20 @@ class RemoteModel(object):
     @property
     def full_url(self):
         return getattr(self, '_full_url', None)
+
+    @property
+    def resource_id(self):
+        if not self._meta['resource_id_field_name']:
+            raise ValueError("No field for resource_id defined")
+        id_field_name = self._meta['resource_id_field_name']
+        return getattr(self, id_field_name)
+
+    @resource_id.setter
+    def resource_id(self, resource_id_value):
+        if not self._meta['resource_id_field_name']:
+            raise ValueError("No field for resource_id defined")
+        id_field_name = self._meta['resource_id_field_name']
+        setattr(self, id_field_name, resource_id_value)
 
     # access methods
     @classmethod

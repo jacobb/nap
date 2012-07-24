@@ -185,3 +185,24 @@ class TestRemoteModelWriteMethods(unittest.TestCase):
         dm = SampleRemoteModel(content='what')
         with raises(ValueError):
             dm.update()
+
+
+class TestResourceID(object):
+
+    def test_resource_id_get(self):
+        dm = SampleRemoteModel(
+            title='expected_title',
+            content='Blank Content',
+            slug='some-slug')
+
+        assert dm.resource_id == 'some-slug'
+
+    def test_resource_id_set(self):
+        dm = SampleRemoteModel(
+            title='expected_title',
+            content='Blank Content',
+            slug='some-slug')
+
+        dm.resource_id = 'a-new-slug'
+
+        assert dm.slug == 'a-new-slug'

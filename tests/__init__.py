@@ -4,6 +4,7 @@ import nap
 class SampleRemoteModel(nap.RemoteModel):
     title = nap.Field()
     content = nap.Field()
+    slug = nap.Field(resource_id=True)
     alt_name = nap.Field(api_name='some_field')
 
     class Meta:
