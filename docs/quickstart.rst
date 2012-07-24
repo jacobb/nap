@@ -2,7 +2,6 @@
 Quickstart
 ==========
 
-
 Step One: Declare your resource
 ===============================
 
@@ -15,12 +14,13 @@ Step One: Declare your resource
 
     class Note(RemoteModel):
 
-        pk = Field(api_name='id')
+        pk = Field(api_name='id', resource_id=True)
         title = Field()
         content = Field()
 
         class Meta:
             root_url = 'http://127.0.0.1:8000/api/'
+            resource_name = 'note'
 
 
 Step Two: Access your data
@@ -30,38 +30,44 @@ Step Two: Access your data
 
     from note.client import Note
 
-    n = Note.objects.get('resource/1/')
+    n = Note.get('resource/1/')
     n.title
     # Some Title
 
 
-Boring, right? Let's add some more stuff...
+    # accesses resource/1/
+    n = Note.lookup(pk=1)
+    n.title = "butterflies"
+    n.content "I sure do love butterflies"
+    n.save()
 
-Step Three: Add a lookup url
+    n = Note.get('resource/1/')
+    n.title
+    # "New Title"
 
-..  code-block:: python
-    :emphasize-lines: 13
+Step Three: Set up custom lookup_urls
+=====================================
 
-    # note/client.py
+.. code-block:: python
+    :emphasize-lines: 2, 13-15
+
     from nap.resources import RemoteModel, Field
-
+    from nap.lookup import nap_url
 
     class Note(RemoteModel):
 
-        pk = Field(api_name='id')
+        pk = Field(api_name='id', resource_id=True)
         title = Field()
         content = Field()
 
         class Meta:
             root_url = 'http://127.0.0.1:8000/api/'
+            resource_name = 'note'
+            additional_urls = (
+                nap_url(r'%(resource_name)s/title/(?P<title>[^/]+)/'),
+            )
 
-    Note.add_lookup_url(r'note/(?P<pk>\d*)/')
-
-    n = Note.lookup(pk=1)
-    n.title = "New Title"
-    n.save()
-
-    n = Note.objects.get('resource/1/')
-    n.title
-    # "New Title"
-
+    # accesses resource/title/butterflies
+    n = Note.lookup(title='butterflies')
+    # "I sure do love butterflies"
+    n.content
