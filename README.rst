@@ -56,7 +56,6 @@ Step Three: Set up custom lookup_urls
 =====================================
 
 .. code-block:: python
-    :emphasize-lines: 2, 13-15
 
     from nap.resources import RemoteModel, Field
     from nap.lookup import nap_url
