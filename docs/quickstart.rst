@@ -23,25 +23,30 @@ Step One: Declare your resource
             resource_name = 'note'
 
 
-Step Two: Access your data
+Step Two: Access your api
 ==========================
 
 .. code-block:: python
 
     from note.client import Note
 
-    n = Note.get('resource/1/')
-    n.title
-    # Some Title
+    n = Note(title='Some Title', content="some content")
 
-
-    # accesses resource/1/
-    n = Note.lookup(pk=1)
-    n.title = "butterflies"
-    n.content "I sure do love butterflies"
+    # POST http://127.0.0.1:8000/api/note/
     n.save()
 
-    n = Note.get('resource/1/')
+    n = Note.get('note/1/')
+    # Some Title
+    n.title
+
+    # GET http://127.0.0.1:8000/api/note/1/
+    n = Note.lookup(pk=1)
+    n.title = "butterflies"
+    n.content = "I sure do love butterflies"
+    # PUT http://127.0.0.1:8000/api/note/1/
+    n.save()
+
+    n = Note.get('note/1/')
     n.title
     # "New Title"
 
@@ -67,7 +72,7 @@ Step Three: Set up custom lookup_urls
                 nap_url(r'%(resource_name)s/title/(?P<title>[^/]+)/'),
             )
 
-    # accesses resource/title/butterflies
+    # GET http://127.0.0.1:8000/api/note/title/butterflies/
     n = Note.lookup(title='butterflies')
     # "I sure do love butterflies"
     n.content
