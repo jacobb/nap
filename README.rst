@@ -78,3 +78,8 @@ Step Three: Set up custom lookup_urls
     n = Note.lookup(title='butterflies')
     # "I sure do love butterflies"
     n.content
+
+Step Four
+=========
+
+Coming soon...
