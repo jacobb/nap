@@ -32,7 +32,6 @@ class DataModelMetaClass(type):
             'resource_id_field_name': None
         }
 
-        # lookup_urls = getattr(options, 'urls', [])
         for name, attr in attrs.iteritems():
             if isinstance(attr, Field):
                 attr._name = name
@@ -44,7 +43,6 @@ class DataModelMetaClass(type):
 
         _meta['fields'] = fields
         setattr(model_cls, '_meta', _meta)
-        # setattr(model_cls, '_lookup_urls', lookup_urls)
         return model_cls
 
 
