@@ -52,6 +52,7 @@ class ResourceModel(object):
 
     def __init__(self, *args, **kwargs):
         self._root_url = kwargs.get('root_url', self._meta['root_url'])
+        self._saved = False
         self.update_fields(kwargs)
 
     def update_fields(self, field_data):
@@ -99,8 +100,12 @@ class ResourceModel(object):
             else:
                 base_vars = {}
 
-            base_vars.update(kwargs)
+            if self._resource_id_name in kwargs and 'resource_id' in url.required_vars:
+                kwargs['resource_id'] = kwargs[self._resource_id_name]
+                if self._resource_id_name not in url.required_vars:
+                    del kwargs[self._resource_id_name]
 
+            base_vars.update(kwargs)
             model_keywords = {
                 'resource_name': self._meta['resource_name']
             }
@@ -163,10 +168,10 @@ class ResourceModel(object):
     # access methods
     @classmethod
     def get(cls, url, *args, **kwargs):
-        self = cls()
+        self = cls(**kwargs)
 
         try:
-            root_url = cls._meta['root_url']
+            root_url = self._meta['root_url']
         except KeyError:
             raise ValueError("`get` requires root_url to be defined")
 
@@ -177,10 +182,10 @@ class ResourceModel(object):
             raise
 
         resource_data['root_url'] = root_url
-        resource_obj = cls(**resource_data)
-        resource_obj._full_url = resource_response.url
+        self.update_fields(resource_data)
+        self._full_url = resource_response.url
 
-        return resource_obj
+        return self
 
     @classmethod
     def lookup(cls, **kwargs):
@@ -206,18 +211,20 @@ class ResourceModel(object):
             self._full_url = url
 
     def create(self, **kwargs):
-
         headers = {'content-type': 'application/json'}
 
         self._request(self.get_create_url(), requests.post,
             data=self.to_json(),
             headers=headers)
 
+        # For now, this will serve as a way to make a newly-created object
+        # not create twice and update instead
+        self._saved = True
+
     # write methods
     def save(self, **kwargs):
-
         # this feels off to me, but it should work for now?
-        if self.full_url or self.get_update_url():
+        if self._saved or self.full_url or self.get_update_url():
             self.update(**kwargs)
         else:
             self.create(**kwargs)
@@ -237,17 +244,25 @@ class ResourceModel(object):
         return getattr(self, '_full_url', None)
 
     @property
-    def resource_id(self):
+    def _resource_id_name(self):
         if not self._meta['resource_id_field_name']:
-            raise ValueError("No field for resource_id defined")
+            return None
         id_field_name = self._meta['resource_id_field_name']
+        return id_field_name
+
+    @property
+    def resource_id(self):
+        id_field_name = self._resource_id_name
+        if not id_field_name:
+            return None
+
         return getattr(self, id_field_name)
 
     @resource_id.setter
     def resource_id(self, resource_id_value):
-        if not self._meta['resource_id_field_name']:
-            raise ValueError("No field for resource_id defined")
-        id_field_name = self._meta['resource_id_field_name']
+        id_field_name = self._resource_id_name
+        if not id_field_name:
+            return None
         setattr(self, id_field_name, resource_id_value)
 
 
