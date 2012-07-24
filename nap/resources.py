@@ -112,7 +112,10 @@ class RemoteModel(object):
                 **base_vars)
 
             if base_uri:
-                return base_uri, params
+                full_uri = make_url(base_uri,
+                    params=params)
+
+                return full_uri
 
         raise ValueError("No valid url")
 
@@ -183,13 +186,13 @@ class RemoteModel(object):
 
     @classmethod
     def lookup(cls, **kwargs):
-        url, params = cls.get_lookup_url(**kwargs)
-        return cls.get(url, params=params)
+        uri = cls.get_lookup_url(**kwargs)
+        return cls.get(uri)
 
     def update(self, **kwargs):
         headers = {'content-type': 'application/json'}
 
-        url, params = self.get_update_url()
+        url = self.get_update_url()
         if not url:
             raise ValueError('full_url or non-readonly lookup_urls required for updates')
 
@@ -199,13 +202,13 @@ class RemoteModel(object):
 
         r = self._request(url, requests.put,
             data=self.to_json(),
-            headers=headers,
-            params=params)
+            headers=headers)
 
         if r.status_code in (200, 201, 204):
             self._full_url = url
 
     def create(self, **kwargs):
+
         headers = {'content-type': 'application/json'}
 
         self._request(self.get_create_url(), requests.post,
@@ -214,6 +217,7 @@ class RemoteModel(object):
 
     # write methods
     def save(self, **kwargs):
+
         # this feels off to me, but it should work for now?
         if self.full_url or self.get_update_url():
             self.update(**kwargs)
