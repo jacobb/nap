@@ -210,3 +210,8 @@ class TestResourceID(object):
         dm.resource_id = 'a-new-slug'
 
         assert dm.slug == 'a-new-slug'
+
+    def test_resource_id_lookup(self):
+        resource_id_url = SampleResourceModel.get_lookup_url(slug='some-slug')
+
+        assert resource_id_url == 'note/some-slug/'

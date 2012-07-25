@@ -1,20 +1,18 @@
 """
 Classes and functions for url resolving
 """
-import sre_parse
-
-from .regex_helper import normalize
+import re
 
 
 class LookupURL(object):
 
-    def __init__(self, pattern, params=None,
+    def __init__(self, url_string, params=None,
             lookup=True, update=False, create=False, collection=False):
         """
         Setup necesary URL meta options
         """
 
-        self.pattern = pattern
+        self.url_string = url_string
         if params is None:
             params = []
         self.params = params
@@ -26,7 +24,10 @@ class LookupURL(object):
 
     @property
     def url_parts(self):
-        return sre_parse.parse(self.pattern).pattern.groupdict.keys()
+
+        pattern = r'\%\(([\w_\-]+)\)s'
+        return re.findall(pattern, self.url_string)
+        # return sre_parse.parse(self.pattern).pattern.groupdict.keys()
 
     @property
     def required_vars(self):
@@ -41,12 +42,9 @@ class LookupURL(object):
             if item[0] not in self.required_vars
         ])
 
-        if hasattr(precompile_vars, 'keys'):
-            pattern = self.pattern % precompile_vars
-        else:
-            pattern = self.pattern
+        pattern = self.url_string
 
-        resource_uri = normalize(pattern)[0][0] % kwargs
+        resource_uri = pattern % kwargs
         return resource_uri, extra_params
 
 
@@ -55,5 +53,5 @@ def nap_url(*args, **kwargs):
 
 default_lookup_urls = (
     nap_url(r'%(resource_name)s/', create=True, lookup=False),
-    nap_url(r'%(resource_name)s/(?P<resource_id>[^/]+)', update=True),
+    nap_url(r'%(resource_name)s/%(resource_id)s', update=True),
 )

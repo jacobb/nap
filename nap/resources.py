@@ -110,9 +110,13 @@ class ResourceModel(object):
                 'resource_name': self._meta['resource_name']
             }
 
-            base_uri, params = url.match(
-                precompile_vars=model_keywords,
-                **base_vars)
+            url_model_keywords = dict([
+                (k, v) for (k, v) in model_keywords.items()
+                if k in url.url_parts
+            ])
+            url_model_keywords.update(base_vars)
+
+            base_uri, params = url.match(**url_model_keywords)
 
             if base_uri:
                 full_uri = make_url(base_uri,

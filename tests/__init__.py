@@ -11,6 +11,6 @@ class SampleResourceModel(nap.ResourceModel):
         root_url = "http://foo.com/v1/"
         resource_name = 'note'
         additional_urls = (
-            nap.lookup.nap_url(r'(?P<hello>\d*)/(?P<what>.*)/'),
-            nap.lookup.nap_url(r'(?P<title>[^/]+)/', update=True),
+            nap.lookup.nap_url(r'%(hello)s/%(what)s/'),
+            nap.lookup.nap_url(r'%(title)s/', update=True),
         )
