@@ -72,7 +72,7 @@ Step Three: Set up custom lookup_urls
             root_url = 'http://127.0.0.1:8000/api/'
             resource_name = 'note'
             additional_urls = (
-                nap_url(r'%(resource_name)s/title/(?P<title>[^/]+)/'),
+                nap_url(r'%(resource_name)s/title/%(title)s/'),
             )
 
     # GET http://127.0.0.1:8000/api/note/title/butterflies/
