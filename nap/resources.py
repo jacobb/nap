@@ -131,7 +131,7 @@ class ResourceModel(object):
         try:
             root_url = self._meta['root_url']
         except KeyError:
-            raise ValueError("`get` requires root_url to be defined")
+            raise ValueError("Nap requests require root_url to be defined")
         full_url = "%s%s" % (root_url, url)
 
         resource_response = request_func(full_url, *args, **kwargs)
@@ -149,7 +149,7 @@ class ResourceModel(object):
         self = cls()
         return self._generate_url(**kwargs)
 
-        raise ValueError("valid URL for lookup variables not found")
+        raise ValueError("no valid URL for lookup found")
 
     def get_update_url(self, **kwargs):
         """
@@ -174,18 +174,12 @@ class ResourceModel(object):
     def get(cls, url, *args, **kwargs):
         self = cls(**kwargs)
 
-        try:
-            root_url = self._meta['root_url']
-        except KeyError:
-            raise ValueError("`get` requires root_url to be defined")
-
         resource_response = self._request(url, requests.get, *args, **kwargs)
         try:
             resource_data = json.loads(resource_response.content)
         except ValueError:
             raise
 
-        resource_data['root_url'] = root_url
         self.update_fields(resource_data)
         self._full_url = resource_response.url
 
@@ -201,7 +195,7 @@ class ResourceModel(object):
 
         url = self.get_update_url()
         if not url:
-            raise ValueError('full_url or non-readonly lookup_urls required for updates')
+            raise ValueError('No update url found')
 
         r = self._request(url, requests.put,
             data=self.to_json(),
@@ -252,18 +246,16 @@ class ResourceModel(object):
 
     @property
     def resource_id(self):
-        id_field_name = self._resource_id_name
-        if not id_field_name:
+        if not self._resource_id_name:
             return None
 
-        return getattr(self, id_field_name)
+        return getattr(self, self._resource_id_name)
 
     @resource_id.setter
     def resource_id(self, resource_id_value):
-        id_field_name = self._resource_id_name
-        if not id_field_name:
+        if not self._resource_id_name:
             return None
-        setattr(self, id_field_name, resource_id_value)
+        setattr(self, self._resource_id_name, resource_id_value)
 
 
 class Field(object):
