@@ -203,27 +203,23 @@ class ResourceModel(object):
         if not url:
             raise ValueError('full_url or non-readonly lookup_urls required for updates')
 
-        r = requests.put(url,
-            data=self.to_json(),
-            headers=headers)
-
         r = self._request(url, requests.put,
             data=self.to_json(),
             headers=headers)
 
-        if r.status_code in (200, 201, 204):
+        if r.status_code == 204:
             self._full_url = url
 
     def create(self, **kwargs):
         headers = {'content-type': 'application/json'}
 
-        self._request(self.get_create_url(), requests.post,
+        r = self._request(self.get_create_url(), requests.post,
             data=self.to_json(),
             headers=headers)
 
-        # For now, this will serve as a way to make a newly-created object
-        # not create twice and update instead
-        self._saved = True
+        if r.status_code == 201:
+            full_url = r.headers.get('location', None)
+            self._full_url = full_url.replace(self._root_url, '')
 
     # write methods
     def save(self, **kwargs):
