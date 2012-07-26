@@ -14,3 +14,11 @@ class SampleResourceModel(nap.ResourceModel):
             nap.lookup.nap_url(r'%(hello)s/%(what)s/'),
             nap.lookup.nap_url(r'%(title)s/', update=True),
         )
+
+
+class AuthorModel(nap.ResourceModel):
+    name = nap.Field()
+    email = nap.Field(default=None)
+
+    class Meta:
+        root_url = "http://foo.com/v1/"

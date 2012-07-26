@@ -4,6 +4,7 @@ import requests
 
 from .lookup import default_lookup_urls
 from .utils import make_url
+from .fields import Field
 
 
 class DataModelMetaClass(type):
@@ -229,7 +230,7 @@ class ResourceModel(object):
             (field_name, getattr(self, field_name))
             for field_name in self._meta['fields'].keys()
         ])
-        self._meta['fields'].keys()
+
         return json.dumps(obj_dict)
 
     # properties
@@ -256,14 +257,3 @@ class ResourceModel(object):
         if not self._resource_id_name:
             return None
         setattr(self, self._resource_id_name, resource_id_value)
-
-
-class Field(object):
-
-    def __init__(self, api_name=None, default=None, resource_id=False):
-        self.api_name = api_name
-        self.default = default
-        self.resource_id = resource_id
-
-    def get_default(self):
-        return self.default
