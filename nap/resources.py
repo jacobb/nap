@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 from .lookup import default_lookup_urls
@@ -177,10 +175,7 @@ class ResourceModel(object):
         self = cls(**kwargs)
 
         resource_response = self._request(url, requests.get, *args, **kwargs)
-        try:
-            resource_data = json.loads(resource_response.content)
-        except ValueError:
-            raise
+        resource_data = self.deserialize(resource_response.content)
 
         self.update_fields(resource_data)
         self._full_url = resource_response.url
@@ -238,9 +233,9 @@ class ResourceModel(object):
         serializer = self.get_serializer()
         return serializer.serialize(self.to_python())
 
-    def deserialize(self, str):
+    def deserialize(self, val_str):
         serializer = self.get_serializer()
-        obj_dict = serializer.deserialize(self.to_python())
+        obj_dict = serializer.deserialize(val_str)
 
         return obj_dict
 
