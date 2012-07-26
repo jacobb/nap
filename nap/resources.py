@@ -5,6 +5,7 @@ import requests
 from .lookup import default_lookup_urls
 from .utils import make_url
 from .fields import Field
+from .serializers import JSONSerializer
 
 
 class DataModelMetaClass(type):
@@ -199,7 +200,7 @@ class ResourceModel(object):
             raise ValueError('No update url found')
 
         r = self._request(url, requests.put,
-            data=self.to_json(),
+            data=self.serialize(),
             headers=headers)
 
         if r.status_code == 204:
@@ -209,7 +210,7 @@ class ResourceModel(object):
         headers = {'content-type': 'application/json'}
 
         r = self._request(self.get_create_url(), requests.post,
-            data=self.to_json(),
+            data=self.serialize(),
             headers=headers)
 
         if r.status_code == 201:
@@ -225,13 +226,26 @@ class ResourceModel(object):
             self.create(**kwargs)
 
     # utility methods
-    def to_json(self):
+    def to_python(self):
         obj_dict = dict([
             (field_name, getattr(self, field_name))
             for field_name in self._meta['fields'].keys()
         ])
 
-        return json.dumps(obj_dict)
+        return obj_dict
+
+    def serialize(self):
+        serializer = self.get_serializer()
+        return serializer.serialize(self.to_python())
+
+    def deserialize(self, str):
+        serializer = self.get_serializer()
+        obj_dict = serializer.deserialize(self.to_python())
+
+        return obj_dict
+
+    def get_serializer(self):
+        return JSONSerializer()
 
     # properties
     @property

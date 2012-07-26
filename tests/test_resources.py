@@ -101,11 +101,11 @@ class TestResourceModelAccessMethods(object):
         SampleResourceModel._lookup_urls = []
 
 
-class TestToJson(object):
+class TestSerialize(object):
 
-    def test_to_json(self):
+    def test_serialize(self):
         dm = SampleResourceModel(title='test title', content='test content')
-        json_string = dm.to_json()
+        json_string = dm.serialize()
         obj_dict = json.loads(json_string)
         assert obj_dict['title'] == 'test title'
         assert obj_dict['content'] == 'test content'
@@ -166,7 +166,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
         with mock.patch('requests.put') as put:
             dm.update()
             put.assert_called_with("http://foo.com/v1/expected_title/",
-                data=dm.to_json(), headers=self.headers)
+                data=dm.serialize(), headers=self.headers)
         SampleResourceModel._lookup_urls = []
 
     def test_create(self):
@@ -179,7 +179,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
             dm._full_url = 'http://foo.com/v1/random_title/'
             dm.create()
             post.assert_called_with("http://foo.com/v1/note/",
-                data=dm.to_json(), headers=self.headers)
+                data=dm.serialize(), headers=self.headers)
         SampleResourceModel._lookup_urls = []
 
     def test_write_with_no_lookup_url(self):
