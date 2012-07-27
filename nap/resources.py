@@ -66,10 +66,12 @@ class ResourceModel(object):
 
         extra_data = set(field_data.keys()) - set(api_name_map.keys())
         for api_name, field_name in api_name_map.iteritems():
+            model_field = model_fields[field_name]
+
             if api_name in field_data:
-                value = field_data[api_name]
+                value = model_field.scrub_value(field_data[api_name])
             else:
-                value = model_fields[field_name].get_default()
+                value = model_field.get_default()
 
             setattr(self, field_name, value)
 
@@ -193,6 +195,11 @@ class ResourceModel(object):
         if r.status_code == 204:
             self._full_url = url
 
+        self.handle_update_response(r)
+
+    def handle_update_response(self, r):
+        pass
+
     def create(self, **kwargs):
         headers = {'content-type': 'application/json'}
 
@@ -203,6 +210,11 @@ class ResourceModel(object):
         if r.status_code == 201:
             full_url = r.headers.get('location', None)
             self._full_url = full_url.replace(self._root_url, '')
+
+        self.handle_create_response(r)
+
+    def handle_create_response(self, r):
+        pass
 
     # write methods
     def save(self, **kwargs):
@@ -258,3 +270,10 @@ class ResourceModel(object):
         if not self._resource_id_name:
             return None
         setattr(self, self._resource_id_name, resource_id_value)
+
+    # etc
+    def __unicode__(self):
+        return "<%s: %s>" % (self.__class__.__name__, self.resource_id)
+
+    def __repr__(self):
+        return unicode(self)

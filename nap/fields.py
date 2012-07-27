@@ -26,12 +26,19 @@ class ResourceField(Field):
         self.resource_model = resource_model
         super(ResourceField, self).__init__(*args, **kwargs)
 
+    def coerce(self, val):
+
+        if isinstance(val, self.resource_model):
+            return val
+
+        return self.resource_model(**val)
+
     def scrub_value(self, val):
         """
         Val should be a string representing a resource_model object
         """
 
-        resource = self.resource_model(**val)
+        resource = self.coerce(val)
         return resource
 
     def descrub_value(self, val):
@@ -42,7 +49,7 @@ class ListField(ResourceField):
 
     def scrub_value(self, val):
 
-        resource_list = [self.resource_model(**v) for v in val]
+        resource_list = [self.coerce(v) for v in val]
         return resource_list
 
     def descrub_value(self, val):
@@ -58,7 +65,7 @@ class DictField(ResourceField):
         """
 
         resource_dict = dict([
-            (k, self.resource_model(**v)) for (k, v) in val.iteritems()
+            (k, self.coerce(v)) for (k, v) in val.iteritems()
         ])
         return resource_dict
 
