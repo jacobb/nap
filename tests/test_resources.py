@@ -51,7 +51,7 @@ class TestResourceModelCreation(object):
 
 class TestResourceModelAccessMethods(object):
 
-    def test_get(self):
+    def test_get_from_uri(self):
 
         fake_dict = {
             'title': "A fake title",
@@ -66,12 +66,21 @@ class TestResourceModelAccessMethods(object):
             stubbed_response.url = expected_url
 
             get.return_value = stubbed_response
-            obj = SampleResourceModel.get('xyz')
+            obj = SampleResourceModel.get_from_uri('xyz')
 
             assert obj.title == fake_dict['title']
             assert obj.content == fake_dict['content']
             assert obj._root_url == model_root_url
             assert obj._full_url == expected_url
+
+    def test_get(self):
+
+        with mock.patch('nap.resources.ResourceModel.get_from_uri') as g:
+            SampleResourceModel.get('/some/uri/')
+            g.assert_called_once
+        with mock.patch('nap.resources.ResourceModel.lookup') as lookup:
+            SampleResourceModel.get(pk=1)
+            lookup.assert_called_once
 
     def test_get_lookup_url(self):
         final_uri = SampleResourceModel.get_lookup_url(hello='1', what='2')

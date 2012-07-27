@@ -171,16 +171,24 @@ class ResourceModel(object):
 
     # access methods
     @classmethod
-    def get(cls, url, *args, **kwargs):
+    def get_from_uri(cls, uri, *args, **kwargs):
         self = cls(**kwargs)
 
-        resource_response = self._request(url, requests.get, *args, **kwargs)
+        resource_response = self._request(uri, requests.get, *args, **kwargs)
         resource_data = self.deserialize(resource_response.content)
 
         self.update_fields(resource_data)
         self._full_url = resource_response.url
 
         return self
+
+    @classmethod
+    def get(cls, uri=None, **kwargs):
+
+        if uri:
+            return cls.get_from_uri(uri)
+
+        return cls.lookup(**kwargs)
 
     @classmethod
     def lookup(cls, **kwargs):
