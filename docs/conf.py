@@ -92,13 +92,13 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 sys.path.append(os.path.abspath('_themes'))
-html_theme_path=['_themes']
+html_theme_path = ['_themes']
 import os
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     html_theme = 'default'
 else:
-    html_theme = 'nature'
+    html_theme = 'flask'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -201,7 +201,6 @@ latex_documents = [
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
 #latex_use_parts = False
-
 # If true, show page references after internal links.
 #latex_show_pagerefs = False
 
