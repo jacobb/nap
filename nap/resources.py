@@ -78,14 +78,6 @@ class ResourceModel(object):
         ])
 
     def _generate_url(self, url_type='lookup', **kwargs):
-        """
-        Three set of varaibles to create a full URL
-
-        kwargs
-        Current object variables (?)
-        meta options
-        """
-
         valid_urls = [
             url for url in self._meta['urls']
             if getattr(url, url_type, False)
@@ -127,7 +119,6 @@ class ResourceModel(object):
         raise ValueError("No valid url")
 
     def _request(self, url, request_func, *args, **kwargs):
-
         try:
             root_url = self._meta['root_url']
         except KeyError:
@@ -141,21 +132,12 @@ class ResourceModel(object):
     # url methods
     @classmethod
     def get_lookup_url(cls, **kwargs):
-        """
-        Cycle through all look up urls.
-
-        If one is a successful match with the given kwargs, return it
-        """
         self = cls()
         return self._generate_url(**kwargs)
 
         raise ValueError("no valid URL for lookup found")
 
     def get_update_url(self, **kwargs):
-        """
-        For the time being, save urls behave similarlly to the lookup method.
-        """
-
         if self.full_url:
             return self.full_url
 
@@ -231,8 +213,8 @@ class ResourceModel(object):
     # utility methods
     def to_python(self):
         obj_dict = dict([
-            (field_name, getattr(self, field_name))
-            for field_name in self._meta['fields'].keys()
+            (field_name, field.descrub_value(getattr(self, field_name)))
+            for field_name, field in self._meta['fields'].iteritems()
         ])
 
         return obj_dict
