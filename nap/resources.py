@@ -29,7 +29,8 @@ class DataModelMetaClass(type):
             'resource_name': resource_name,
             'root_url': getattr(options, 'root_url', None),
             'urls': urls,
-            'resource_id_field_name': None
+            'resource_id_field_name': None,
+            'add_slash': getattr(options, 'add_slash', True),
         }
 
         for name, attr in attrs.iteritems():
@@ -112,7 +113,8 @@ class ResourceModel(object):
 
             if base_uri:
                 full_uri = make_url(base_uri,
-                    params=params)
+                    params=params,
+                    add_slash=self._meta['add_slash'])
 
                 return full_uri
 

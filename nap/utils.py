@@ -1,9 +1,9 @@
 import urllib
 
 
-def make_url(base_url, params=None):
+def make_url(base_url, params=None, add_slash=True):
     "Split off in case we need to handle more scrubing"
-    if not base_url.endswith('/'):
+    if add_slash and not base_url.endswith('/'):
         base_url = "%s/" % base_url
 
     if params:
