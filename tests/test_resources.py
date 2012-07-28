@@ -173,10 +173,25 @@ class TestResourceModelWriteMethods(unittest.TestCase):
             title='expected_title',
             content='Blank Content')
         with mock.patch('requests.put') as put:
+            r = mock.Mock()
+            r.content = ''
+            put.return_value = r
             dm.update()
             put.assert_called_with("http://foo.com/v1/expected_title/",
                 data=dm.serialize(), headers=self.headers)
         SampleResourceModel._lookup_urls = []
+
+    def test_handle_update_response(self):
+        dm = SampleResourceModel(title='old title')
+        dm._full_url = 'http://foo.com/v1/random_title/'
+        with mock.patch('requests.put') as put:
+            r = mock.Mock()
+            r.content = json.dumps({'title': 'hello', 'content': 'content'})
+            r.status_code = 204
+            put.return_value = r
+            dm.update()
+        assert dm.title == 'hello'
+        assert dm.content == 'content'
 
     def test_create(self):
 
@@ -185,11 +200,26 @@ class TestResourceModelWriteMethods(unittest.TestCase):
             title='expected_title',
             content='Blank Content')
         with mock.patch('requests.post') as post:
-            dm._full_url = 'http://foo.com/v1/random_title/'
+            r = mock.Mock()
+            r.content = ''
+            r.headers = {'location': 'http://foo.com/v1/random_title/'}
+            r.status_code = 201
+            post.return_value = r
             dm.create()
             post.assert_called_with("http://foo.com/v1/note/",
                 data=dm.serialize(), headers=self.headers)
         SampleResourceModel._lookup_urls = []
+
+    def test_handle_create_response(self):
+        dm = SampleResourceModel(title='old title')
+        with mock.patch('requests.post') as post:
+            r = mock.Mock()
+            r.content = json.dumps({'title': 'hello', 'content': 'content'})
+            post.return_value = r
+            dm.create()
+
+        assert dm.title == 'hello'
+        assert dm.content == 'content'
 
     def test_write_with_no_lookup_url(self):
 
@@ -224,3 +254,11 @@ class TestResourceID(object):
         resource_id_url = SampleResourceModel.get_lookup_url(slug='some-slug')
 
         assert resource_id_url == 'note/some-slug/'
+
+
+class TestReourceEtcMethods(object):
+
+    def test_repr(self):
+        dm = SampleResourceModel(slug='some-slug')
+
+        assert str(dm) == '<SampleResourceModel: some-slug>'

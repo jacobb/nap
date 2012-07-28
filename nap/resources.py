@@ -59,6 +59,14 @@ class ResourceModel(object):
 
     def update_fields(self, field_data):
 
+        if not hasattr(field_data, 'keys'):
+            """
+            field_Data is not a map-like object, so let's try coercing it
+            from a string
+            """
+            serializer = self.get_serializer()
+            field_data = serializer.deserialize(field_data)
+
         model_fields = self._meta['fields']
         api_name_map = dict([
             (field.api_name or name, name)
@@ -182,6 +190,7 @@ class ResourceModel(object):
         uri = cls.get_lookup_url(**kwargs)
         return cls.get(uri)
 
+    # write methods
     def update(self, **kwargs):
         headers = {'content-type': 'application/json'}
 
@@ -202,13 +211,10 @@ class ResourceModel(object):
         if not self._meta['update_from_write'] or not r.content:
             return
 
-        serializer = self.get_serializer()
         try:
-            response_data = serializer.deserialize(r.content)
+            self.update_fields(r.content)
         except ValueError:
             return
-
-        self.update_fields(response_data)
 
     def create(self, **kwargs):
         headers = {'content-type': 'application/json'}
@@ -227,16 +233,11 @@ class ResourceModel(object):
 
         if not self._meta['update_from_write'] or not r.content:
             return
-
-        serializer = self.get_serializer()
         try:
-            response_data = serializer.deserialize(r.content)
+            self.update_fields(r.content)
         except ValueError:
             return
 
-        self.update_fields(response_data)
-
-    # write methods
     def save(self, **kwargs):
         # this feels off to me, but it should work for now?
         if self._saved or self.full_url or self.get_update_url():
