@@ -1,5 +1,3 @@
-import json
-
 import nap
 
 
@@ -22,21 +20,13 @@ class Gist(nap.ResourceModel):
     html_url = nap.Field(readonly=True)
     files = nap.DictField(GistFile)
 
-    def handle_create_response(self, r):
-        try:
-            response_data = json.loads(r.content)
-        except ValueError:
-            return
-
-        self.update_fields(response_data)
-
     class Meta:
         resource_name = 'gists'
         root_url = 'https://api.github.com/'
         add_slash = False
 
 
-# gf = GistFile(content='test')
-# g = Gist(description="nap test", files={'what.txt': gf}, public=True)
-# g.save()
-# g.html_url
+gf = GistFile(content='test')
+g = Gist(description="nap test", files={'what.txt': gf}, public=True)
+g.save()
+g.html_url

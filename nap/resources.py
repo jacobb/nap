@@ -31,6 +31,7 @@ class DataModelMetaClass(type):
             'urls': urls,
             'resource_id_field_name': None,
             'add_slash': getattr(options, 'add_slash', True),
+            'update_from_write': getattr(options, 'update_from_write', True)
         }
 
         for name, attr in attrs.iteritems():
@@ -198,7 +199,16 @@ class ResourceModel(object):
         self.handle_update_response(r)
 
     def handle_update_response(self, r):
-        pass
+        if not self._meta['update_from_write'] or not r.content:
+            return
+
+        serializer = self.get_serializer()
+        try:
+            response_data = serializer.deserialize(r.content)
+        except ValueError:
+            return
+
+        self.update_fields(response_data)
 
     def create(self, **kwargs):
         headers = {'content-type': 'application/json'}
@@ -214,7 +224,17 @@ class ResourceModel(object):
         self.handle_create_response(r)
 
     def handle_create_response(self, r):
-        pass
+
+        if not self._meta['update_from_write'] or not r.content:
+            return
+
+        serializer = self.get_serializer()
+        try:
+            response_data = serializer.deserialize(r.content)
+        except ValueError:
+            return
+
+        self.update_fields(response_data)
 
     # write methods
     def save(self, **kwargs):
