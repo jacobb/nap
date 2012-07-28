@@ -62,7 +62,7 @@ class TestResourceModelAccessMethods(object):
             stubbed_response.content = json.dumps(fake_dict)
 
             model_root_url = SampleResourceModel._meta['root_url']
-            expected_url = "%s%s/" % (model_root_url, 'xyz')
+            expected_url = "xyz/"
             stubbed_response.url = expected_url
 
             get.return_value = stubbed_response

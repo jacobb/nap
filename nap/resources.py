@@ -139,12 +139,14 @@ class ResourceModel(object):
         except KeyError:
             raise ValueError("Nap requests require root_url to be defined")
         full_url = "%s%s" % (root_url, url)
-        for auth in self. _meta['auth']:
+        for auth in self._meta['auth']:
             full_url, args, kwargs = auth.handle_request(full_url, *args, **kwargs)
 
         resource_response = request_func(full_url, *args, **kwargs)
-        for auth in self. _meta['auth']:
+        for auth in self._meta['auth']:
             resource_response = auth.handle_response(resource_response)
+
+        return resource_response
 
     # url methods
     @classmethod
@@ -195,7 +197,6 @@ class ResourceModel(object):
         return cls.get(uri)
 
     # collection access methods
-
     @classmethod
     def all(cls):
         """
@@ -204,22 +205,7 @@ class ResourceModel(object):
 
         Assumes a JSON array will be returned.
         """
-        tmp_obj = cls()
-        url = tmp_obj._generate_url(url_type='collection')
-        r = tmp_obj._request(url, requests.get)
-
-        if r.status_code not in (200,):
-            raise ValueError('http error')
-
-        serializer = tmp_obj.get_serializer()
-        obj_list = serializer.deserialize(r.content)
-
-        if not hasattr(obj_list, '__iter__'):
-            raise ValueError('excpeted array-type response')
-
-        resource_list = [cls(**obj_dict) for obj_dict in obj_list]
-
-        return resource_list
+        return cls.filter()
 
     @classmethod
     def filter(cls, **kwargs):
@@ -254,7 +240,7 @@ class ResourceModel(object):
         if not url:
             raise ValueError('No update url found')
 
-        r = self._request(url, requests.patch,
+        r = self._request(url, requests.put,
             data=self.serialize(),
             headers=headers)
 
