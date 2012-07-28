@@ -1,4 +1,9 @@
 import nap
+from nap.auth import FoauthAuthorization
+
+import requests
+
+import secret
 
 
 class GistFile(nap.ResourceModel):
@@ -24,9 +29,14 @@ class Gist(nap.ResourceModel):
         resource_name = 'gists'
         root_url = 'https://api.github.com/'
         add_slash = False
+        update_method = requests.patch
+        additional_urls = '%(resource_name)s/%(gist_property)s'
+        auth = (
+            FoauthAuthorization(secret.foauth_email, secret.foauth_password),
+        )
 
 
-gf = GistFile(content='test')
-g = Gist(description="nap test", files={'what.txt': gf}, public=True)
-g.save()
-g.html_url
+# gf = GistFile(content='test')
+# g = Gist(description="nap test", files={'what.txt': gf}, public=True)
+# g.save()
+# g.html_url

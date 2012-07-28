@@ -5,3 +5,5 @@
 htmlcov
 _build
 __pycache__
+secret.py
+

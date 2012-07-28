@@ -31,7 +31,9 @@ class DataModelMetaClass(type):
             'urls': urls,
             'resource_id_field_name': None,
             'add_slash': getattr(options, 'add_slash', True),
-            'update_from_write': getattr(options, 'update_from_write', True)
+            'update_from_write': getattr(options, 'update_from_write', True),
+            'update_method': getattr(options, 'update_method', requests.put),
+            'auth': getattr(options, 'auth', ()),
         }
 
         for name, attr in attrs.iteritems():
@@ -137,10 +139,12 @@ class ResourceModel(object):
         except KeyError:
             raise ValueError("Nap requests require root_url to be defined")
         full_url = "%s%s" % (root_url, url)
+        for auth in self. _meta['auth']:
+            full_url, args, kwargs = auth.handle_request(full_url, *args, **kwargs)
 
         resource_response = request_func(full_url, *args, **kwargs)
-
-        return resource_response
+        for auth in self. _meta['auth']:
+            resource_response = auth.handle_response(resource_response)
 
     # url methods
     @classmethod
@@ -173,7 +177,7 @@ class ResourceModel(object):
         resource_data = self.deserialize(resource_response.content)
 
         self.update_fields(resource_data)
-        self._full_url = resource_response.url
+        self._full_url = resource_response.url.replace(self._root_url, '')
 
         return self
 
@@ -190,6 +194,58 @@ class ResourceModel(object):
         uri = cls.get_lookup_url(**kwargs)
         return cls.get(uri)
 
+    # collection access methods
+
+    @classmethod
+    def all(cls):
+        """
+        Accesses the first URL set as a collections URL with no additional
+        parameters passed.
+
+        Assumes a JSON array will be returned.
+        """
+        tmp_obj = cls()
+        url = tmp_obj._generate_url(url_type='collection')
+        r = tmp_obj._request(url, requests.get)
+
+        if r.status_code not in (200,):
+            raise ValueError('http error')
+
+        serializer = tmp_obj.get_serializer()
+        obj_list = serializer.deserialize(r.content)
+
+        if not hasattr(obj_list, '__iter__'):
+            raise ValueError('excpeted array-type response')
+
+        resource_list = [cls(**obj_dict) for obj_dict in obj_list]
+
+        return resource_list
+
+    @classmethod
+    def filter(cls, **kwargs):
+        """
+        Accesses the first URL set as a collections URL with no additional
+        parameters passed.
+
+        Assumes a JSON array will be returned.
+        """
+        tmp_obj = cls()
+        url = tmp_obj._generate_url(url_type='collection', **kwargs)
+        r = tmp_obj._request(url, requests.get)
+
+        if r.status_code not in (200,):
+            raise ValueError('http error')
+
+        serializer = tmp_obj.get_serializer()
+        obj_list = serializer.deserialize(r.content)
+
+        if not hasattr(obj_list, '__iter__'):
+            raise ValueError('excpeted array-type response')
+
+        resource_list = [cls(**obj_dict) for obj_dict in obj_list]
+
+        return resource_list
+
     # write methods
     def update(self, **kwargs):
         headers = {'content-type': 'application/json'}
@@ -198,11 +254,11 @@ class ResourceModel(object):
         if not url:
             raise ValueError('No update url found')
 
-        r = self._request(url, requests.put,
+        r = self._request(url, requests.patch,
             data=self.serialize(),
             headers=headers)
 
-        if r.status_code == 204:
+        if r.status_code in (200, 201, 204):
             self._full_url = url
 
         self.handle_update_response(r)

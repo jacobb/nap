@@ -52,6 +52,6 @@ def nap_url(*args, **kwargs):
     return LookupURL(*args, **kwargs)
 
 default_lookup_urls = (
-    nap_url(r'%(resource_name)s/', create=True, lookup=False),
-    nap_url(r'%(resource_name)s/%(resource_id)s', update=True),
+    nap_url('%(resource_name)s/', create=True, lookup=False, collection=True),
+    nap_url('%(resource_name)s/%(resource_id)s', update=True),
 )
