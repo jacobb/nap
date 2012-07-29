@@ -1,9 +1,8 @@
-import requests
-
-from .lookup import default_lookup_urls
-from .utils import make_url
 from .fields import Field
+from .http import NapRequest
+from .lookup import default_lookup_urls
 from .serializers import JSONSerializer
+from .utils import make_url
 
 
 class DataModelMetaClass(type):
@@ -32,7 +31,7 @@ class DataModelMetaClass(type):
             'resource_id_field_name': None,
             'add_slash': getattr(options, 'add_slash', True),
             'update_from_write': getattr(options, 'update_from_write', True),
-            'update_method': getattr(options, 'update_method', requests.put),
+            'update_method': getattr(options, 'update_method', 'PUT'),
             'auth': getattr(options, 'auth', ()),
         }
 
@@ -133,16 +132,19 @@ class ResourceModel(object):
 
         raise ValueError("No valid url")
 
-    def _request(self, url, request_func, *args, **kwargs):
+    def _request(self, request_method, url, *args, **kwargs):
         try:
             root_url = self._meta['root_url']
         except KeyError:
             raise ValueError("Nap requests require root_url to be defined")
-        full_url = "%s%s" % (root_url, url)
-        for auth in self._meta['auth']:
-            full_url, args, kwargs = auth.handle_request(full_url, *args, **kwargs)
 
-        resource_response = request_func(full_url, *args, **kwargs)
+        full_url = "%s%s" % (root_url, url)
+        request = NapRequest(request_method, full_url, *args, **kwargs)
+
+        for auth in self._meta['auth']:
+            request = auth.handle_request(request)
+
+        resource_response = request.request()
         for auth in self._meta['auth']:
             resource_response = auth.handle_response(resource_response)
 
@@ -172,10 +174,10 @@ class ResourceModel(object):
 
     # access methods
     @classmethod
-    def get_from_uri(cls, uri, *args, **kwargs):
+    def get_from_uri(cls, url, *args, **kwargs):
         self = cls(**kwargs)
 
-        resource_response = self._request(uri, requests.get, *args, **kwargs)
+        resource_response = self._request('GET', url, *args, **kwargs)
         resource_data = self.deserialize(resource_response.content)
 
         self.update_fields(resource_data)
@@ -217,7 +219,7 @@ class ResourceModel(object):
         """
         tmp_obj = cls()
         url = tmp_obj._generate_url(url_type='collection', **kwargs)
-        r = tmp_obj._request(url, requests.get)
+        r = tmp_obj._request('GET', url)
 
         if r.status_code not in (200,):
             raise ValueError('http error')
@@ -240,8 +242,8 @@ class ResourceModel(object):
         if not url:
             raise ValueError('No update url found')
 
-        r = self._request(url, requests.put,
-            data=self.serialize(),
+        r = self._request(self._meta['update_method'], url,
+            data=self.serialize(write=True),
             headers=headers)
 
         if r.status_code in (200, 201, 204):
@@ -261,7 +263,7 @@ class ResourceModel(object):
     def create(self, **kwargs):
         headers = {'content-type': 'application/json'}
 
-        r = self._request(self.get_create_url(), requests.post,
+        r = self._request('POST', self.get_create_url(),
             data=self.serialize(),
             headers=headers)
 
@@ -292,11 +294,12 @@ class ResourceModel(object):
         obj_dict = dict([
             (field_name, field.descrub_value(getattr(self, field_name)))
             for field_name, field in self._meta['fields'].iteritems()
+            if field.readonly is False
         ])
 
         return obj_dict
 
-    def serialize(self):
+    def serialize(self, write=False):
         serializer = self.get_serializer()
         return serializer.serialize(self.to_python())
 

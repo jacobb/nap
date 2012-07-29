@@ -57,7 +57,7 @@ class TestResourceModelAccessMethods(object):
             'title': "A fake title",
             'content': "isnt this neat",
         }
-        with mock.patch('requests.get') as get:
+        with mock.patch('nap.http.NapRequest.request') as get:
             stubbed_response = mock.Mock()
             stubbed_response.content = json.dumps(fake_dict)
 
@@ -172,19 +172,19 @@ class TestResourceModelWriteMethods(unittest.TestCase):
         dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content')
-        with mock.patch('requests.put') as put:
+        with mock.patch('requests.request') as put:
             r = mock.Mock()
             r.content = ''
             put.return_value = r
             dm.update()
-            put.assert_called_with("http://foo.com/v1/expected_title/",
+            put.assert_called_with('PUT', "http://foo.com/v1/expected_title/",
                 data=dm.serialize(), headers=self.headers)
         SampleResourceModel._lookup_urls = []
 
     def test_handle_update_response(self):
         dm = SampleResourceModel(title='old title')
         dm._full_url = 'http://foo.com/v1/random_title/'
-        with mock.patch('requests.put') as put:
+        with mock.patch('nap.http.NapRequest.request') as put:
             r = mock.Mock()
             r.content = json.dumps({'title': 'hello', 'content': 'content'})
             r.status_code = 204
@@ -199,20 +199,20 @@ class TestResourceModelWriteMethods(unittest.TestCase):
         dm = SampleResourceModel(
             title='expected_title',
             content='Blank Content')
-        with mock.patch('requests.post') as post:
+        with mock.patch('requests.request') as post:
             r = mock.Mock()
             r.content = ''
             r.headers = {'location': 'http://foo.com/v1/random_title/'}
             r.status_code = 201
             post.return_value = r
             dm.create()
-            post.assert_called_with("http://foo.com/v1/note/",
+            post.assert_called_with('POST', "http://foo.com/v1/note/",
                 data=dm.serialize(), headers=self.headers)
         SampleResourceModel._lookup_urls = []
 
     def test_handle_create_response(self):
         dm = SampleResourceModel(title='old title')
-        with mock.patch('requests.post') as post:
+        with mock.patch('nap.http.NapRequest.request') as post:
             r = mock.Mock()
             r.content = json.dumps({'title': 'hello', 'content': 'content'})
             post.return_value = r
@@ -259,6 +259,13 @@ class TestResourceID(object):
 class TestReourceEtcMethods(object):
 
     def test_repr(self):
-        dm = SampleResourceModel(slug='some-slug')
 
+        dm = SampleResourceModel(slug='some-slug')
         assert str(dm) == '<SampleResourceModel: some-slug>'
+
+
+class TestResourceAuth(object):
+
+    def test_meta_set(self):
+        # SampleResourceModel
+        pass
