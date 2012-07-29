@@ -144,7 +144,7 @@ class ResourceModel(object):
         for auth in self._meta['auth']:
             request = auth.handle_request(request)
 
-        resource_response = request.request()
+        resource_response = request.send()
         for auth in self._meta['auth']:
             resource_response = auth.handle_response(resource_response)
 

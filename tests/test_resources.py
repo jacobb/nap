@@ -57,7 +57,7 @@ class TestResourceModelAccessMethods(object):
             'title': "A fake title",
             'content': "isnt this neat",
         }
-        with mock.patch('nap.http.NapRequest.request') as get:
+        with mock.patch('requests.request') as get:
             stubbed_response = mock.Mock()
             stubbed_response.content = json.dumps(fake_dict)
 
@@ -184,7 +184,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
     def test_handle_update_response(self):
         dm = SampleResourceModel(title='old title')
         dm._full_url = 'http://foo.com/v1/random_title/'
-        with mock.patch('nap.http.NapRequest.request') as put:
+        with mock.patch('requests.request') as put:
             r = mock.Mock()
             r.content = json.dumps({'title': 'hello', 'content': 'content'})
             r.status_code = 204
@@ -212,7 +212,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
 
     def test_handle_create_response(self):
         dm = SampleResourceModel(title='old title')
-        with mock.patch('nap.http.NapRequest.request') as post:
+        with mock.patch('requests.request') as post:
             r = mock.Mock()
             r.content = json.dumps({'title': 'hello', 'content': 'content'})
             post.return_value = r

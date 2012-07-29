@@ -25,7 +25,7 @@ class NapRequest(object):
             raise ValueError("Invalid method")
         self._method = value
 
-    def request(self):
+    def send(self):
         response = requests.request(self.method, self.url,
             data=self.data,
             headers=self.headers,
