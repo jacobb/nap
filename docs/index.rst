@@ -11,5 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   tutorial
    quickstart
+   about
+   api
+   options
