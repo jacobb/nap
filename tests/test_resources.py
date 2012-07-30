@@ -96,7 +96,7 @@ class TestResourceModelAccessMethods(object):
         SampleResourceModel._lookup_urls = []
 
     def test_lookup(self):
-        with mock.patch('nap.resources.ResourceModel.get') as get:
+        with mock.patch('nap.resources.ResourceModel.get_from_uri') as get:
             SampleResourceModel.lookup(hello='hello_test', what='what_test')
             get.assert_called_with('hello_test/what_test/')
 
@@ -178,7 +178,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
             put.return_value = r
             dm.update()
             put.assert_called_with('PUT', "http://foo.com/v1/expected_title/",
-                data=dm.serialize(), headers=self.headers)
+                data=dm.serialize(), headers=self.headers, auth=None)
         SampleResourceModel._lookup_urls = []
 
     def test_handle_update_response(self):
@@ -207,7 +207,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
             post.return_value = r
             dm.create()
             post.assert_called_with('POST', "http://foo.com/v1/note/",
-                data=dm.serialize(), headers=self.headers)
+                data=dm.serialize(), headers=self.headers, auth=None)
         SampleResourceModel._lookup_urls = []
 
     def test_handle_create_response(self):
@@ -220,6 +220,19 @@ class TestResourceModelWriteMethods(unittest.TestCase):
 
         assert dm.title == 'hello'
         assert dm.content == 'content'
+
+    def test_filter(self):
+        with mock.patch('requests.request') as request:
+            r = mock.Mock()
+            r.status_code = 200
+            r.content = json.dumps([
+                {'title': 'hello', 'content': 'content'},
+                {'title': 'hello', 'content': 'content'}
+            ])
+            request.return_value = r
+            dms = SampleResourceModel.filter(title='title')
+
+        assert len(dms) == 2
 
     def test_write_with_no_lookup_url(self):
 

@@ -10,7 +10,7 @@ class SampleResourceModel(nap.ResourceModel):
     class Meta:
         root_url = "http://foo.com/v1/"
         resource_name = 'note'
-        additional_urls = (
+        append_urls = (
             nap.lookup.nap_url(r'%(hello)s/%(what)s/'),
             nap.lookup.nap_url(r'%(title)s/', update=True),
         )

@@ -1,12 +1,19 @@
 import urllib
 
 
+def handle_slash(url, add_slash=None):
+    if add_slash and not url.endswith('/'):
+        url = "%s/" % url
+    elif add_slash is False and url.endswith('/'):
+        url = url[:-1]
+
+    return url
+
+
 def make_url(base_url, params=None, add_slash=None):
     "Split off in case we need to handle more scrubing"
-    if add_slash and not base_url.endswith('/'):
-        base_url = "%s/" % base_url
-    elif add_slash is False and base_url.endswith('/'):
-        base_url = base_url[:-1]
+
+    base_url = handle_slash(base_url, add_slash)
 
     if params:
         param_string = urllib.urlencode(params)

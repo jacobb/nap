@@ -11,6 +11,7 @@ class NapRequest(object):
         self.url = url
         self.data = kwargs.pop('data', None)
         self.headers = kwargs.pop('headers', {})
+        self.auth = kwargs.pop('auth', None)
         self.extra_args = args
         self.extra_kwargs = kwargs
 
@@ -29,6 +30,7 @@ class NapRequest(object):
         response = requests.request(self.method, self.url,
             data=self.data,
             headers=self.headers,
+            auth=self.auth,
             *self.extra_args,
             **self.extra_kwargs
         )

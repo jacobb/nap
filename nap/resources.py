@@ -2,7 +2,7 @@ from .fields import Field
 from .http import NapRequest
 from .lookup import default_lookup_urls
 from .serializers import JSONSerializer
-from .utils import make_url
+from .utils import make_url, handle_slash
 
 
 class DataModelMetaClass(type):
@@ -21,8 +21,10 @@ class DataModelMetaClass(type):
         resource_name = getattr(options, 'resource_name', default_name)
 
         urls = getattr(options, 'urls', default_lookup_urls)
-        additional_urls = tuple(getattr(options, 'additional_urls', ()))
-        urls += additional_urls
+        append_urls = tuple(getattr(options, 'append_urls', ()))
+        prepend_urls = tuple(getattr(options, 'prepend_urls', ()))
+
+        urls = prepend_urls + urls + append_urls
 
         _meta = {
             'resource_name': resource_name,
@@ -60,6 +62,7 @@ class ResourceModel(object):
 
     def update_fields(self, field_data):
 
+        self._raw_field_data = field_data
         if not hasattr(field_data, 'keys'):
             """
             field_Data is not a map-like object, so let's try coercing it
@@ -144,9 +147,9 @@ class ResourceModel(object):
         for auth in self._meta['auth']:
             request = auth.handle_request(request)
 
+        print request.url
+
         resource_response = request.send()
-        for auth in self._meta['auth']:
-            resource_response = auth.handle_response(resource_response)
 
         return resource_response
 
@@ -177,11 +180,13 @@ class ResourceModel(object):
     def get_from_uri(cls, url, *args, **kwargs):
         self = cls(**kwargs)
 
+        url = handle_slash(url, self._meta['add_slash'])
         resource_response = self._request('GET', url, *args, **kwargs)
         resource_data = self.deserialize(resource_response.content)
 
+        self._raw_response_content = resource_data
         self.update_fields(resource_data)
-        self._full_url = resource_response.url.replace(self._root_url, '')
+        self._full_url = url
 
         return self
 
@@ -196,7 +201,7 @@ class ResourceModel(object):
     @classmethod
     def lookup(cls, **kwargs):
         uri = cls.get_lookup_url(**kwargs)
-        return cls.get(uri)
+        return cls.get_from_uri(uri)
 
     # collection access methods
     @classmethod
