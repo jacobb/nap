@@ -124,14 +124,14 @@ class ResourceModel(object):
             ])
             url_model_keywords.update(base_vars)
 
-            base_uri, params = url.match(**url_model_keywords)
+            base_url, params = url.match(**url_model_keywords)
 
-            if base_uri:
-                full_uri = make_url(base_uri,
+            if base_url:
+                full_url = make_url(base_url,
                     params=params,
                     add_slash=self._meta['add_slash'])
 
-                return full_uri
+                return full_url
 
         raise ValueError("No valid url")
 
@@ -166,11 +166,11 @@ class ResourceModel(object):
             return self.full_url
 
         try:
-            update_uri = self._generate_url(url_type='update', **kwargs)
+            update_url = self._generate_url(url_type='update', **kwargs)
         except ValueError:
-            update_uri = None
+            update_url = None
 
-        return update_uri
+        return update_url
 
     def get_create_url(self, **kwargs):
         return self._generate_url(url_type='create', **kwargs)

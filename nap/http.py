@@ -3,15 +3,23 @@ import requests
 
 class NapRequest(object):
 
+    """
+    A request to send to a nap-modeled API. Primarily used internally within
+    ResourceModel methods.
+    """
+
     VALID_HTTP_METHODS = ('GET', 'POST', 'PUT', 'DELETE', 'PATCH')
 
-    def __init__(self, method, url, *args, **kwargs):
+    def __init__(self, method, url, data=None, headers=None, auth=None,
+        *args, **kwargs):
 
         self._method = method
         self.url = url
-        self.data = kwargs.pop('data', None)
-        self.headers = kwargs.pop('headers', {})
-        self.auth = kwargs.pop('auth', None)
+        self.data = data
+        if not headers:
+            headers = {}
+        self.headers = headers
+        self.auth = auth
         self.extra_args = args
         self.extra_kwargs = kwargs
 

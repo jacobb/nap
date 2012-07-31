@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 2
 
    quickstart
-   about
-   api
+   models
+   fields
+   urls
    options
+   resourcemodel
+   about

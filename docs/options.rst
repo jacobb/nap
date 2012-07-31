@@ -25,12 +25,14 @@ The name used to refer to a source in URLs. ``resource_name`` is appended to ``r
 **Defaults to:** ``None``
 
 
+.. _urls:
+
 ``urls``
 ========
 
 *Optional*
 
-Urls used to lookup API requests
+URLs used to lookup API requests. See :doc:`urls` for more information on definging ResourceModel urls.
 
 **Defaults to:** A tuple of urls set to::
 
@@ -44,6 +46,30 @@ Urls used to lookup API requests
     )
 
 
+.. _append_urls:
+
+``append_urls``
+===============
+
+*Optional*
+
+URLs to be added after ResourceModel's default_urls. See :doc:`urls` for more information on definging ResourceModel urls.
+
+**Defaults to:** () (an empty tuple)
+
+
+.. _prepend_urls:
+
+``prepend_urls``
+================
+
+*Optional*
+
+URLs to be added before ResourceModel's default_urls. See :doc:`urls` for more information on definging ResourceModel urls.
+
+**Defaults to:** () (an empty tuple)
+
+
 
 ``add_slash``
 =============
@@ -52,9 +78,9 @@ Urls used to lookup API requests
 
 Determines whehter or not slashes are appended to a url.
 
-If ``True``, slashes will always be added to the end of URLs.
-If ``False``, slashes will always be removed from the end of URLs
-If ``None``, URLs will follow what is defined in the ``nap_url`` string.
+* If ``True``, slashes will always be added to the end of URLs.
+* If ``False``, slashes will always be removed from the end of URLs
+* If ``None``, URLs will follow what is defined in the ``nap_url`` string.
 
 **Defaults to:** ``None``
 

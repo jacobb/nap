@@ -27,7 +27,6 @@ class LookupURL(object):
 
         pattern = r'\%\(([\w_\-]+)\)s'
         return re.findall(pattern, self.url_string)
-        # return sre_parse.parse(self.pattern).pattern.groupdict.keys()
 
     @property
     def required_vars(self):
