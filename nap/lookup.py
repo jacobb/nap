@@ -32,7 +32,7 @@ class LookupURL(object):
     def required_vars(self):
         return tuple(self.url_parts + list(self.params))
 
-    def match(self, precompile_vars=None, **kwargs):
+    def match(self, **kwargs):
         if set(self.required_vars) - set(kwargs.keys()):
             return None, None
 
