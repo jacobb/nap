@@ -66,11 +66,17 @@ LookupURLs may require variables to fully resolve. Required variables are either
 #) The values of fields, where the name of the field is passed as the variable name.
 #) Meta variables specific to the subclass of ResourceModel
 
+The above lists these groups in order of presidence--eg, If :meth:`~nap.resources.ResourceModel.update` is called on a ResourceModel with a resource_name of 'person', but a keyword argument of ``resource_name='author'``, %(resource_name)s will resolve to ``author``.
+
 
 .. _meta_variables:
 
 Meta Variables available for URLs
 ---------------------------------
+
+Currently, there is only one meta variable passed to LookupURL.
+
+.. _meta_resource_name:
 
 ``resource_name``
 -----------------
@@ -82,6 +88,8 @@ URL API
 =======
 
 .. class:: LookupURL
+
+    Class in charge of resolving variable URLs based on keyword arguments. Used for any dynamic API method on :class:`~nap.resources.ResourceModel`
 
 .. method:: LookupURL.__init__(url_string, [params=None, create=False, update=False, lookup=False, collection=False])
 
@@ -97,10 +105,20 @@ URL API
 
     :param collection: Designates whether or not the URL is valid for create operations
 
-.. attribute:: LookupURL.url_parts
+.. attribute:: LookupURL.url_vars
+
+    Returns a tuple the names of variables contained within a :class:`!LookupURL`
 
 .. attribute:: LookupURL.required_vars
 
-.. method:: LookupURL.match(**kwargs)
+    Returns a tuple of the the names of all variables required to successfully resolve a URL.
 
-    :param
+.. method:: LookupURL.match(**lookup_vars)
+
+    Attempts to resolve a string of a URL, resolving any variables based on ``lookup_vars``.
+
+    Returns a two tuple of the matching URL string and extra lookup variables that were passed in but not part of the required values.
+
+    If no match is found, a two tuple of (``None``, ``None``) is returned.
+
+    :param lookup_vars: A dict-like variable mapping URL variables names to

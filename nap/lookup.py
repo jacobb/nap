@@ -23,27 +23,27 @@ class LookupURL(object):
         self.collection = collection
 
     @property
-    def url_parts(self):
+    def url_vars(self):
 
         pattern = r'\%\(([\w_\-]+)\)s'
         return re.findall(pattern, self.url_string)
 
     @property
     def required_vars(self):
-        return tuple(self.url_parts + list(self.params))
+        return tuple(self.url_vars + list(self.params))
 
-    def match(self, **kwargs):
-        if set(self.required_vars) - set(kwargs.keys()):
+    def match(self, **lookup_vars):
+        if set(self.required_vars) - set(lookup_vars.keys()):
             return None, None
 
         extra_params = dict([
-            item for item in kwargs.items()
+            item for item in lookup_vars.items()
             if item[0] not in self.required_vars
         ])
 
         pattern = self.url_string
 
-        resource_uri = pattern % kwargs
+        resource_uri = pattern % lookup_vars
         return resource_uri, extra_params
 
 

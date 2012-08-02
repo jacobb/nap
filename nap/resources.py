@@ -117,7 +117,7 @@ class ResourceModel(object):
 
             url_match_vars = dict([
                 (k, v) for (k, v) in model_keywords.items()
-                if k in url.url_parts
+                if k in url.url_vars
             ])
 
             url_match_vars.update(field_values)
