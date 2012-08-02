@@ -99,32 +99,31 @@ class ResourceModel(object):
             if getattr(url, url_type, False)
         ]
         for url in valid_urls:
-            if isinstance(self, ResourceModel):
-                base_vars = dict([
-                    (var, getattr(self, var))
-                    for var in url.required_vars
-                    if getattr(self, var, None)
-                ])
-            else:
-                base_vars = {}
+            field_values = dict([
+                (var, getattr(self, var))
+                for var in url.required_vars
+                if getattr(self, var, None)
+            ])
 
+            # handle resource_id fields
             if self._resource_id_name in kwargs and 'resource_id' in url.required_vars:
                 kwargs['resource_id'] = kwargs[self._resource_id_name]
                 if self._resource_id_name not in url.required_vars:
                     del kwargs[self._resource_id_name]
 
-            base_vars.update(kwargs)
             model_keywords = {
                 'resource_name': self._meta['resource_name']
             }
 
-            url_model_keywords = dict([
+            url_match_vars = dict([
                 (k, v) for (k, v) in model_keywords.items()
                 if k in url.url_parts
             ])
-            url_model_keywords.update(base_vars)
 
-            base_url, params = url.match(**url_model_keywords)
+            url_match_vars.update(field_values)
+            url_match_vars.update(kwargs)
+
+            base_url, params = url.match(**url_match_vars)
 
             if base_url:
                 full_url = make_url(base_url,
