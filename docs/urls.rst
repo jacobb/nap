@@ -45,12 +45,37 @@ Lookup types closely match the kind of operations possible with an API. They are
 Valid URL Strings
 -----------------
 
-A URL string is simply a python string, optionally containing dictionary-format variables. nap bases it's required variables partially on any format variables contained in the URL string.
+A URL string is simply a python string, optionally containing dictionary-format variables.
 
+nap bases it's :ref:`required variables<url_variables>` partially on any format variables contained in the URL string.
+
+
+.. _url_variables:
 
 URL Variables
 -------------
 
+LookupURLs may require variables to fully resolve. Required variables are either
+
+#) Python string format variables contained in the url_string, or
+#) Any variables named passed into a :class:`~nap.lookup.LookupURL :meth:`~nap.lookup.LookupURL.__init__`'s ``param`` parameter. These variables are passed into the URL via a URL query string.
+
+:class:`~nap.resources.ResourceModel` passes in three kinds of variables into the LookupURL's match function to determine if all required variables are available for URL resolution:
+
+#) Keyword arguments passed to lookup function (eg, :meth:`ResourceModel.get()<nap.resources.ResourceModel.get>`, :meth:`ResourceModel.update()<nap.resources.ResourceModel.update>`)
+#) The values of fields, where the name of the field is passed as the variable name.
+#) Meta variables specific to the subclass of ResourceModel
+
+
+.. _meta_variables:
+
+Meta Variables available for URLs
+---------------------------------
+
+``resource_name``
+-----------------
+
+The resource name of the ResourceModel. Equal to :ref:`resource_name`
 
 
 URL API
@@ -58,10 +83,24 @@ URL API
 
 .. class:: LookupURL
 
-.. method:: LookupURL.__init__(url_string, params=None, create=None, update=None, lookup=None, collection=None)
+.. method:: LookupURL.__init__(url_string, [params=None, create=False, update=False, lookup=False, collection=False])
+
+    :param url_string: python-formatted string representing a URL
+
+    :param params: an iterable of variables names required by the URL, as passed in a GET query string.
+
+    :param create: Designates whether or not the URL is valid for create operations
+
+    :param update: Designates whether or not the URL is valid for create operations
+
+    :param lookup: Designates whether or not the URL is valid for create operations
+
+    :param collection: Designates whether or not the URL is valid for create operations
 
 .. attribute:: LookupURL.url_parts
 
 .. attribute:: LookupURL.required_vars
 
 .. method:: LookupURL.match(**kwargs)
+
+    :param

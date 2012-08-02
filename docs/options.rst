@@ -2,6 +2,7 @@
 Options
 =======
 
+.. _resource_name:
 
 ``resource_name``
 =================
