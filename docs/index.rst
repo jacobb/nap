@@ -6,15 +6,30 @@
 Welcome to nap's documentation!
 ===============================
 
+===
+nap
+===
+Accessing APIs open-endily is an easy affair. pip install requests, pass in your data get data back. But the slight differences and demands of different API creating code that’s structured, re-usable and simple proves difficult.
+
+nap hopes to help.
+
+nap aims to be:
+
+* Support Read (GET) and Write (POST/PUT/PATCH)
+* Little to no configuration needed for to-spec REST APIs
+* Easy to configure to fit any REST-like API
+* Customize to fit even edgier use cases
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
    quickstart
+   tutorial
    models
    fields
    urls
    options
    resourcemodel
-   about
+   etc

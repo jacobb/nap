@@ -77,3 +77,10 @@ Step Three: Set up custom lookup_urls
     n = Note.lookup(title='New Title')
     # "I sure do love butterflies"
     n.content
+
+Step Four: What's next?
+=======================
+
+* Learn more about tweaking :class:`~nap.resources.ResourceModel` by looking at :doc:`tutorial`
+* :doc:`Learn about LookupURLs<urls>`--the main engine behind nap.
+* Look deep into the :doc:`resourcemodel`

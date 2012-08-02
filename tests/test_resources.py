@@ -109,6 +109,19 @@ class TestResourceModelAccessMethods(object):
 
         SampleResourceModel._lookup_urls = []
 
+    def test_generate_url(self):
+        rm = SampleResourceModel(hello='1', slug='slug')
+        assert rm._generate_url(url_type='create') == 'note/'
+
+        # assert that keyword arguments take precedence over meta arguments
+        essay_url = rm._generate_url(url_type='create', resource_name='essay')
+        assert essay_url == 'essay/'
+
+        assert rm._generate_url(url_type='update') == 'note/slug/'
+        # assert that keyword arguments take predecnce over field values
+        new_slug_url = rm._generate_url(url_type='update', slug='new-slug')
+        assert new_slug_url == 'note/new-slug/'
+
 
 class TestSerialize(object):
 

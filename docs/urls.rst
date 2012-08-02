@@ -94,15 +94,10 @@ URL API
 .. method:: LookupURL.__init__(url_string, [params=None, create=False, update=False, lookup=False, collection=False])
 
     :param url_string: python-formatted string representing a URL
-
     :param params: an iterable of variables names required by the URL, as passed in a GET query string.
-
     :param create: Designates whether or not the URL is valid for create operations
-
     :param update: Designates whether or not the URL is valid for create operations
-
     :param lookup: Designates whether or not the URL is valid for create operations
-
     :param collection: Designates whether or not the URL is valid for create operations
 
 .. attribute:: LookupURL.url_vars

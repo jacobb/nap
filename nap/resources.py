@@ -56,18 +56,22 @@ class ResourceModel(object):
     __metaclass__ = DataModelMetaClass
 
     def __init__(self, *args, **kwargs):
+        """Construct a new model instance
+        """
         self._root_url = kwargs.get('root_url', self._meta['root_url'])
         self._saved = False
         self.update_fields(kwargs)
 
     def update_fields(self, field_data):
+        """Update object's values to values of field_data
+
+        :param field_data: dict-like object with 'Field Name'->'New  Value'
+        """
 
         self._raw_field_data = field_data
         if not hasattr(field_data, 'keys'):
-            """
-            field_Data is not a map-like object, so let's try coercing it
-            from a string
-            """
+            # field_Data is not a map-like object, so let's try coercing it
+            # from a string
             serializer = self.get_serializer()
             field_data = serializer.deserialize(field_data)
 
@@ -94,6 +98,13 @@ class ResourceModel(object):
         ])
 
     def _generate_url(self, url_type='lookup', **kwargs):
+        """Iterates through object's URL list to find an approrpiate match
+        between ``url_type`` and ``kwargs
+
+        :param url_type: string representing the type of URL to find. options \
+        are "lookup", "create", "update" and "collection"
+        :param kwargs: additional variables to pass to the LookupURL's match method
+        """
         valid_urls = [
             url for url in self._meta['urls']
             if getattr(url, url_type, False)
@@ -135,6 +146,8 @@ class ResourceModel(object):
         raise ValueError("No valid url")
 
     def _request(self, request_method, url, *args, **kwargs):
+        "Construct a NapRequest and send it via a requests.rest call"
+
         try:
             root_url = self._meta['root_url']
         except KeyError:
@@ -155,12 +168,20 @@ class ResourceModel(object):
     # url methods
     @classmethod
     def get_lookup_url(cls, **kwargs):
+        """Generate a URL suitable for get requests based on ``kwargs``
+
+        :param kwargs: URL lookup variables
+        """
         self = cls()
         return self._generate_url(**kwargs)
 
         raise ValueError("no valid URL for lookup found")
 
     def get_update_url(self, **kwargs):
+        """Generate a URL suitable for update requests based on ``kwargs``
+
+        :param kwargs: URL lookup variables
+        """
         if self.full_url:
             return self.full_url
 
@@ -172,11 +193,18 @@ class ResourceModel(object):
         return update_url
 
     def get_create_url(self, **kwargs):
+        """Generate a URL suitable for create requests based on ``kwargs``
+
+        :param kwargs: URL lookup variables
+        """
         return self._generate_url(url_type='create', **kwargs)
 
     # access methods
     @classmethod
     def get_from_uri(cls, url, *args, **kwargs):
+        """Issues a get request to the API. Request is sent to the model's
+        root_url + url keyword argument. \*args and \*\*kwargs are sent to `
+        """
         self = cls(**kwargs)
 
         url = handle_slash(url, self._meta['add_slash'])
@@ -191,6 +219,13 @@ class ResourceModel(object):
 
     @classmethod
     def get(cls, uri=None, **kwargs):
+        """Issues a get request to the API. If ``uri`` is passed, will send a
+        request directly to that URL. otherwise, attempt a lookup request.
+
+        :param uri: a string representing an API uri
+        :param kwargs: optional variables to send to \
+            :meth:`~nap.resources.ResourceClass.lookup`
+        """
 
         if uri:
             return cls.get_from_uri(uri)
@@ -198,31 +233,33 @@ class ResourceModel(object):
         return cls.lookup(**kwargs)
 
     @classmethod
-    def lookup(cls, **kwargs):
-        uri = cls.get_lookup_url(**kwargs)
+    def lookup(cls, **lookup_vars):
+        """Creates a get request to the API to the first URL found based on
+        ``lookup_vars``
+
+        :param lookup_vars: variables to send to get_lookup_url
+        """
+        uri = cls.get_lookup_url(**lookup_vars)
         return cls.get_from_uri(uri)
 
     # collection access methods
     @classmethod
     def all(cls):
-        """
-        Accesses the first URL set as a collections URL with no additional
-        parameters passed.
-
-        Assumes a JSON array will be returned.
+        """Creates a get request to the API to the first collection URL with
+        no parameters passed
         """
         return cls.filter()
 
     @classmethod
-    def filter(cls, **kwargs):
+    def filter(cls, **lookup_vars):
         """
         Accesses the first URL set as a collections URL with no additional
-        parameters passed.
+        parameters passed. Returns a list of current ResourceModel objects
 
-        Assumes a JSON array will be returned.
+        :param lookup_vars: variables to pass to _generate_url
         """
         tmp_obj = cls()
-        url = tmp_obj._generate_url(url_type='collection', **kwargs)
+        url = tmp_obj._generate_url(url_type='collection', **lookup_vars)
         r = tmp_obj._request('GET', url)
 
         if r.status_code not in (200,):
@@ -240,14 +277,19 @@ class ResourceModel(object):
 
     # write methods
     def update(self, **kwargs):
+        """Sends a create request to the API, validating and handling any
+        response received.
+
+        :param kwargs: keyword arguments passed to get_create_url
+        """
         headers = {'content-type': 'application/json'}
 
-        url = self.get_update_url()
+        url = self.get_update_url(**kwargs)
         if not url:
             raise ValueError('No update url found')
 
         r = self._request(self._meta['update_method'], url,
-            data=self.serialize(write=True),
+            data=self.serialize(),
             headers=headers)
 
         if r.status_code in (200, 201, 204):
@@ -256,6 +298,14 @@ class ResourceModel(object):
         self.handle_update_response(r)
 
     def handle_update_response(self, r):
+        """Handle any actions needed after a HTTP response has been validated
+        for an update action
+
+        Intended for easy subclassing. By default, attempt to update the
+        current object from the response's content
+
+        :param response: a requests.Response object
+        """
         if not self._meta['update_from_write'] or not r.content:
             return
 
@@ -265,9 +315,14 @@ class ResourceModel(object):
             return
 
     def create(self, **kwargs):
+        """Sends a create request to the API, validating and handling any
+        response received.
+
+        :param kwargs: keyword arguments passed to get_create_url
+        """
         headers = {'content-type': 'application/json'}
 
-        r = self._request('POST', self.get_create_url(),
+        r = self._request('POST', self.get_create_url(**kwargs),
             data=self.serialize(),
             headers=headers)
 
@@ -277,16 +332,27 @@ class ResourceModel(object):
 
         self.handle_create_response(r)
 
-    def handle_create_response(self, r):
+    def handle_create_response(self, response):
+        """Handle any actions needed after a HTTP response has been validated
+        for a create action
 
-        if not self._meta['update_from_write'] or not r.content:
+        Intended for easy subclassing. By default, attempt to update the
+        current object from the response's content
+
+        :param response: a requests.Response object
+        """
+
+        if not self._meta['update_from_write'] or not response.content:
             return
         try:
-            self.update_fields(r.content)
+            self.update_fields(response.content)
         except ValueError:
             return
 
     def save(self, **kwargs):
+        """Contextually save current object. If an object can generate an
+        update URL, send an update command. Otherwise, create
+        """
         # this feels off to me, but it should work for now?
         if self._saved or self.full_url or self.get_update_url():
             self.update(**kwargs)
@@ -295,6 +361,8 @@ class ResourceModel(object):
 
     # utility methods
     def to_python(self):
+        """Converts editable field data to a python dictionary
+        """
         obj_dict = dict([
             (field_name, field.descrub_value(getattr(self, field_name)))
             for field_name, field in self._meta['fields'].iteritems()
@@ -303,11 +371,20 @@ class ResourceModel(object):
 
         return obj_dict
 
-    def serialize(self, write=False):
+    def serialize(self):
+        """Convert field data of `self` to the appropriate string serialization format
+        """
+
         serializer = self.get_serializer()
         return serializer.serialize(self.to_python())
 
     def deserialize(self, val_str):
+        """Converts a string into a python dictionary appropriate for
+        field updating
+
+        :param val_str: python string to convert
+        """
+
         serializer = self.get_serializer()
         obj_dict = serializer.deserialize(val_str)
 
@@ -319,24 +396,21 @@ class ResourceModel(object):
     # properties
     @property
     def full_url(self):
+        "Return a pre-set resource URL if available"
         return getattr(self, '_full_url', None)
 
     @property
     def _resource_id_name(self):
-        if not self._meta['resource_id_field_name']:
-            return None
-        id_field_name = self._meta['resource_id_field_name']
-        return id_field_name
+        return self._meta.get('resource_id_field_name', None)
 
     @property
     def resource_id(self):
-        if not self._resource_id_name:
-            return None
-
-        return getattr(self, self._resource_id_name)
+        "Return object's resource_id value. Returns None if not available"
+        return getattr(self, self._resource_id_name, None)
 
     @resource_id.setter
     def resource_id(self, resource_id_value):
+        "Set object's resource_id field to ``resource_id_value``"
         if not self._resource_id_name:
             return None
         setattr(self, self._resource_id_name, resource_id_value)
