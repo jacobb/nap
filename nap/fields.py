@@ -38,6 +38,8 @@ class ResourceField(Field):
         Val should be a string representing a resource_model object
         """
 
+        if not val:
+            return None
         resource = self.coerce(val)
         return resource
 
