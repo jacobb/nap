@@ -33,4 +33,4 @@ API
 ===
 
 .. autoclass:: ResourceModel
-    :members: get, create, update, filter, all, handle_create_response, handle_update_response, serialize, deserialize, to_python, full_url, resource_id
+    :members: get, refresh, create, update, filter, all, handle_create_response, handle_update_response, serialize, deserialize, to_python, full_url, resource_id
