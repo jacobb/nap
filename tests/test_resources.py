@@ -122,6 +122,18 @@ class TestResourceModelAccessMethods(object):
         new_slug_url = rm._generate_url(url_type='update', slug='new-slug')
         assert new_slug_url == 'note/new-slug/'
 
+    def test_refresh(self):
+        rm = SampleResourceModel(pk=5, title="bad title")
+        with mock.patch('requests.request') as request:
+            r = mock.Mock()
+            r.content = json.dumps({'title': 'new title'})
+            r.status_code = 200
+            request.return_value = r
+            rm.refresh()
+            assert request.called
+
+        assert rm.title == 'new title'
+
 
 class TestSerialize(object):
 

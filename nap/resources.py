@@ -197,14 +197,7 @@ class ResourceModel(object):
         """
         return self._generate_url(url_type='create', **kwargs)
 
-    # access methods
-    @classmethod
-    def get_from_uri(cls, url, *args, **kwargs):
-        """Issues a get request to the API. Request is sent to the model's
-        root_url + url keyword argument. \*args and \*\*kwargs are sent to `
-        """
-        self = cls(**kwargs)
-
+    def load_from_url(self, url, *args, **kwargs):
         url = handle_slash(url, self._meta['add_slash'])
         resource_response = self._request('GET', url, *args, **kwargs)
         resource_data = self.deserialize(resource_response.content)
@@ -212,6 +205,17 @@ class ResourceModel(object):
         self._raw_response_content = resource_data
         self.update_fields(resource_data)
         self._full_url = url
+
+        self.handle_get_response(resource_response)
+
+    # access methods
+    @classmethod
+    def get_from_uri(cls, url, *args, **kwargs):
+        """Issues a get request to the API. Request is sent to the model's
+        root_url + url keyword argument. \*args and \*\*kwargs are sent to `
+        """
+        self = cls(**kwargs)
+        self.load_from_url(url, *args, **kwargs)
 
         return self
 
@@ -239,6 +243,10 @@ class ResourceModel(object):
         """
         uri = cls.get_lookup_url(**lookup_vars)
         return cls.get_from_uri(uri)
+
+    def refresh(self, *args, **kwargs):
+        url = self.full_url or self._generate_url(url_type='lookup')
+        self.load_from_url(url, *args, **kwargs)
 
     # collection access methods
     @classmethod
@@ -272,6 +280,12 @@ class ResourceModel(object):
         resource_list = [cls(**obj_dict) for obj_dict in obj_list]
 
         return resource_list
+
+    def handle_get_response(self, response):
+        """Handle any actions needed after a HTTP Response has ben validated
+        for a get (get, refresh, lookup) action
+        """
+        pass
 
     # write methods
     def update(self, **kwargs):
