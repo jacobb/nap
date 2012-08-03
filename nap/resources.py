@@ -35,6 +35,10 @@ class DataModelMetaClass(type):
             'update_from_write': getattr(options, 'update_from_write', True),
             'update_method': getattr(options, 'update_method', 'PUT'),
             'auth': getattr(options, 'auth', ()),
+
+            'valid_get_status': getattr(options, 'valid_get_status', (200,)),
+            'valid_update_status': getattr(options, 'valid_update_status', (204,)),
+            'valid_create_status': getattr(options, 'valid_create_status', (201,)),
         }
 
         for name, attr in attrs.iteritems():
@@ -197,17 +201,6 @@ class ResourceModel(object):
         """
         return self._generate_url(url_type='create', **kwargs)
 
-    def load_from_url(self, url, *args, **kwargs):
-        url = handle_slash(url, self._meta['add_slash'])
-        resource_response = self._request('GET', url, *args, **kwargs)
-        resource_data = self.deserialize(resource_response.content)
-
-        self._raw_response_content = resource_data
-        self.update_fields(resource_data)
-        self._full_url = url
-
-        self.handle_get_response(resource_response)
-
     # access methods
     @classmethod
     def get_from_uri(cls, url, *args, **kwargs):
@@ -248,6 +241,31 @@ class ResourceModel(object):
         url = self.full_url or self._generate_url(url_type='lookup')
         self.load_from_url(url, *args, **kwargs)
 
+    def load_from_url(self, url, *args, **kwargs):
+        """instance method to perform all non-collection get requests
+        """
+        url = handle_slash(url, self._meta['add_slash'])
+        response = self._request('GET', url, *args, **kwargs)
+
+        self.validate_get_response(response)
+        self._full_url = url
+        self.handle_get_response(response)
+
+    def validate_get_response(self, response):
+        """Validate get response is valid to use for updating our object
+        """
+        if response.status_code not in self._meta['valid_get_status']:
+            raise ValueError
+
+    def handle_get_response(self, response):
+        """Handle any actions needed after a HTTP Response has ben validated
+        for a get (get, refresh, lookup) action
+        """
+        resource_data = self.deserialize(response.content)
+
+        self._raw_response_content = resource_data
+        self.update_fields(resource_data)
+
     # collection access methods
     @classmethod
     def all(cls):
@@ -281,12 +299,6 @@ class ResourceModel(object):
 
         return resource_list
 
-    def handle_get_response(self, response):
-        """Handle any actions needed after a HTTP Response has ben validated
-        for a get (get, refresh, lookup) action
-        """
-        pass
-
     # write methods
     def update(self, **kwargs):
         """Sends a create request to the API, validating and handling any
@@ -300,14 +312,17 @@ class ResourceModel(object):
         if not url:
             raise ValueError('No update url found')
 
-        r = self._request(self._meta['update_method'], url,
+        response = self._request(self._meta['update_method'], url,
             data=self.serialize(),
             headers=headers)
 
-        if r.status_code in (200, 201, 204):
-            self._full_url = url
+        self.validate_update_response(response)
+        self._full_url = url
+        self.handle_update_response(response)
 
-        self.handle_update_response(r)
+    def validate_update_response(self, response):
+        if response.status_code not in self._meta['valid_update_status']:
+            raise ValueError("Invalid Update Response")
 
     def handle_update_response(self, r):
         """Handle any actions needed after a HTTP response has been validated
@@ -334,15 +349,16 @@ class ResourceModel(object):
         """
         headers = {'content-type': 'application/json'}
 
-        r = self._request('POST', self.get_create_url(**kwargs),
+        response = self._request('POST', self.get_create_url(**kwargs),
             data=self.serialize(),
             headers=headers)
 
-        if r.status_code == 201:
-            full_url = r.headers.get('location', None)
-            self._full_url = full_url.replace(self._root_url, '')
+        self.validate_create_response(response)
+        self.handle_create_response(response)
 
-        self.handle_create_response(r)
+    def validate_create_response(self, response):
+        if response.status_code not in self._meta['valid_create_status']:
+            raise ValueError
 
     def handle_create_response(self, response):
         """Handle any actions needed after a HTTP response has been validated
@@ -354,8 +370,11 @@ class ResourceModel(object):
         :param response: a requests.Response object
         """
 
+        full_url = response.headers.get('location', None)
+        self._full_url = full_url.replace(self._root_url, '')
         if not self._meta['update_from_write'] or not response.content:
             return
+
         try:
             self.update_fields(response.content)
         except ValueError:

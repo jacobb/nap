@@ -64,6 +64,7 @@ class TestResourceModelAccessMethods(object):
             model_root_url = SampleResourceModel._meta['root_url']
             expected_url = "xyz/"
             stubbed_response.url = expected_url
+            stubbed_response.status_code = 200
 
             get.return_value = stubbed_response
             obj = SampleResourceModel.get_from_uri('xyz')
@@ -200,6 +201,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
         with mock.patch('requests.request') as put:
             r = mock.Mock()
             r.content = ''
+            r.status_code = 204
             put.return_value = r
             dm.update()
             put.assert_called_with('PUT', "http://foo.com/v1/expected_title/",
@@ -240,6 +242,7 @@ class TestResourceModelWriteMethods(unittest.TestCase):
         with mock.patch('requests.request') as post:
             r = mock.Mock()
             r.content = json.dumps({'title': 'hello', 'content': 'content'})
+            r.status_code = 201
             post.return_value = r
             dm.create()
 
