@@ -26,10 +26,16 @@ Contents:
    :maxdepth: 2
 
    quickstart
-   tutorial
-   models
+
+* Tutorial.
+   * :doc:`Part 1: a Tastypie API <tutorial/tutorial1>`
+   * :doc:`Part 2: Github Gist API <tutorial/tutorial2>`
+
+.. toctree::
+   :maxdepth: 2
+
+   resourcemodel
    fields
    urls
    options
-   resourcemodel
    etc

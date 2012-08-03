@@ -81,6 +81,6 @@ Step Three: Set up custom lookup_urls
 Step Four: What's next?
 =======================
 
-* Learn more about tweaking :class:`~nap.resources.ResourceModel` by looking at :doc:`tutorial`
+* Learn more about tweaking :class:`~nap.resources.ResourceModel` by looking at :doc:`tutorial/tutorial1`
 * :doc:`Learn about LookupURLs<urls>`--the main engine behind nap.
 * Look deep into the :doc:`resourcemodel`
