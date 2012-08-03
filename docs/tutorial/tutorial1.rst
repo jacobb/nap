@@ -10,7 +10,4 @@ In part one of our tutorial, we'll be creating a :class:`~ResourceModel` to inte
 Step 0: Writing our API
 =======================
 
-Our API will closely match the one inferred to in :doc:`quickstart`. Feel free to write your own as you follow along with this tutorial, but if you'd like to just use ours, the source code is available `here <sample_site>`_
-
-
-.. _sample_site: https://github.com/jacobb/example_nap_api/
+Our API will closely match the one inferred to in :doc:`quickstart`. Feel free to write your own as you follow along with this tutorial, but if you'd like to just use ours, the source code is available `here <https://github.com/jacobb/example_nap_api/>`_
