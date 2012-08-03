@@ -2,6 +2,7 @@
 Quickstart
 ==========
 
+
 Step One: Declare your resource
 ===============================
 
