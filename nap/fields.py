@@ -42,6 +42,8 @@ class ResourceField(Field):
         return resource
 
     def descrub_value(self, val):
+        if not val:
+            return None
         return val.to_python()
 
 
