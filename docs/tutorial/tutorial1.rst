@@ -49,7 +49,7 @@ Our API is empty right now (assuming you haven't added data manually), so let's 
     n.content = "Daniel Lindsley rocks da house"
     n.save()
 
-There! We've now created our first object in our API, and can retrieve it by it's id:
+There! We've now created our first object in our API, and can retrieve it by it's id::
 
     n = Note(pk=1)
     print n.title  # "A New Note!"
@@ -97,3 +97,15 @@ show how easy it is to extend ResourceModel.
             super(Note, self).handle_create_response(response)
             if not response.content:
                 self.refresh()
+
+We call the parent handle_create_response to let it handle the default behavior (eg, setting of ``full_url``), then if we don't have any content to go off of, refresh the object. Now our create process is seemless::
+
+>>> n = Note(title='what up')
+>>> n.save()  # Issues a POST to /api/v1/note/
+>>> print n.pk  # 6
+>>> n.content = 'some content'
+>>> n.save()  # Issues a PUT to /api/v1/note/6/
+
+And there we have it! A feature-full interface to our REST API.
+
+In the next step, We'll go into handling a REST-like, but slightly off spec, REST API with some further tweaks.
