@@ -38,4 +38,5 @@ Contents:
    fields
    urls
    options
+   auth
    etc

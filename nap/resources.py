@@ -255,7 +255,8 @@ class ResourceModel(object):
         """Validate get response is valid to use for updating our object
         """
         if response.status_code not in self._meta['valid_get_status']:
-            raise ValueError
+            raise ValueError("Expected status code in %s, got %s" %\
+                (self._meta['valid_get_status'], response.status_code))
 
     def handle_get_response(self, response):
         """Handle any actions needed after a HTTP Response has ben validated
@@ -322,7 +323,9 @@ class ResourceModel(object):
 
     def validate_update_response(self, response):
         if response.status_code not in self._meta['valid_update_status']:
-            raise ValueError("Invalid Update Response")
+            raise ValueError("Invalid Update Response: expected stauts_code"
+                        " in %s, got %s" % \
+                        (self._meta['valid_update_status'], response.status_code))
 
     def handle_update_response(self, r):
         """Handle any actions needed after a HTTP response has been validated

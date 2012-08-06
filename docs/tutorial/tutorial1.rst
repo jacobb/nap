@@ -17,6 +17,8 @@ Step 1: Writing a basic ResourceModel
 
 Let's start by writing a very basic ResourceModel and going through it's parts::
 
+    from nap import ResourceModel, Field, ResourceField
+
     class Note(ResourceModel):
 
         title = Field(default='new title')
@@ -45,21 +47,21 @@ Step 2: Using your ResourceModel
 
 Our API is empty right now (assuming you haven't added data manually), so let's add a new Note::
 
-    n = Note(title="A New Note!")
-    n.content = "Daniel Lindsley rocks da house"
-    n.save()
+    >>> n = Note(title="A New Note!")
+    >>> n.content = "Daniel Lindsley rocks da house"
+    >>> n.save()
 
 There! We've now created our first object in our API, and can retrieve it by it's id::
 
-    n = Note(pk=1)
-    print n.title  # "A New Note!"
+    >>> n = Note(pk=1)
+    >>> print n.title  # "A New Note!"
 
 Remember, since we used ``api_name`` on the pk Field in our :class:`~nap.resources.ResourceModel` definition, we use ``pk`` to look up a value that the API refers to as `id`
 
 We can also update and save this resource::
 
-    n.title = "Let's use a new title"
-    n.save()
+    >>> n.title = "Let's use a new title"
+    >>> n.save()
 
 And a PUT is issues to our API, updating our record.
 
@@ -80,7 +82,9 @@ Not only does this sound like the best method, it also gives us an excuse to
 show how easy it is to extend ResourceModel.
 
 .. code-block:: python
-    :emphasize-lines: 12-15
+    :emphasize-lines: 14-17
+
+    from nap import ResourceModel, Field, ResourceField
 
     class Note(ResourceModel):
 

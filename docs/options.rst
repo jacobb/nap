@@ -70,7 +70,7 @@ URLs to be added before ResourceModel's default_urls. See :doc:`urls` for more i
 
 **Defaults to:** () (an empty tuple)
 
-
+.. _add_slash:
 
 ``add_slash``
 =============
@@ -103,6 +103,8 @@ Determines whether or not nap attempts to change an object's field data based on
 String representing HTTP method used to update (edit) resource objects.
 
 **Defaults to:** "PUT"
+
+.. _auth:
 
 ``auth``
 =========
