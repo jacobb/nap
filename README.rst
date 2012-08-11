@@ -63,4 +63,4 @@ https://nap.readthedocs.org
 Installation
 ============
 
-``% pip install https://github.com/jacobb/nap/``
+``% pip install git+https://github.com/jacobb/nap/``
