@@ -294,13 +294,10 @@ class ResourceModel(object):
         serializer = tmp_obj.get_serializer()
         r_data = serializer.deserialize(r.content)
         collection_field = cls._meta.get('collection_field')
-        print collection_field
         if collection_field:
             obj_list = r_data[collection_field]
         else:
             obj_list = r_data
-
-        print obj_list
 
         if not hasattr(obj_list, '__iter__'):
             raise ValueError('excpeted array-type response')
