@@ -2,11 +2,12 @@
 nap
 ===
 
-api access modeling and tools
+api access models and tools
+===========================
 
-Step One: Declare your resource
-===============================
+Accessing APIs open-endily is an easy affair. pip install requests, pass in your data get data back. But the slight differences and demands of different API creating code that’s structured, re-usable and simple proves difficult.
 
+nap hopes to help.
 
 ..  code-block:: python
 
@@ -24,14 +25,6 @@ Step One: Declare your resource
             root_url = 'http://127.0.0.1:8000/api/'
             resource_name = 'note'
 
-
-Step Two: Access your api
-==========================
-
-.. code-block:: python
-
-    from note.client import Note
-
     n = Note(title='Some Title', content="some content")
 
     # POST http://127.0.0.1:8000/api/note/
@@ -44,7 +37,7 @@ Step Two: Access your api
     # GET http://127.0.0.1:8000/api/note/1/
     n = Note.lookup(pk=1)
     n.title = "New Title"
-    n.content = "I sure do love butterflies"
+    n.content = "I sure do love naps!"
 
     # PUT http://127.0.0.1:8000/api/note/1/
     n.save()
@@ -54,28 +47,20 @@ Step Two: Access your api
     n.title
 
 
-Step Three: Set up custom lookup_urls
-=====================================
+nap aims to:
 
-.. code-block:: python
+* Support Read (GET) and Write (POST/PUT/PATCH)
+* Required little to no configuration needed for to-spec REST APIs
+* Be easily configurable to fit any REST-like API
+* Be customizable to fit even edgier use cases
 
-    from nap.resources import ResourceModel, Field
-    from nap.lookup import nap_url
 
-    class Note(ResourceModel):
+Docs
+====
+https://nap.readthedocs.org
 
-        pk = Field(api_name='id', resource_id=True)
-        title = Field()
-        content = Field()
 
-        class Meta:
-            root_url = 'http://127.0.0.1:8000/api/'
-            resource_name = 'note'
-            additional_urls = (
-                nap_url(r'%(resource_name)s/title/%(title)s/'),
-            )
+Installation
+============
 
-    # GET http://127.0.0.1:8000/api/note/title/butterflies/
-    n = Note.lookup(title='New Title')
-    # "I sure do love butterflies"
-    n.content
+``% pip install https://github.com/jacobb/nap/``

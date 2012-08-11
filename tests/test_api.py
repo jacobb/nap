@@ -1,6 +1,6 @@
 import mock
 
-import nap
+from nap.api import API
 from . import SampleResourceModel
 
 
@@ -17,7 +17,7 @@ expected_note_output = {
 class TestManagerMethods(object):
 
     def test_get(self):
-        api = nap.API('http://slumber.in/api/v1/', auth=('demo', 'demo'))
+        api = API('http://slumber.in/api/v1/', auth=('demo', 'demo'))
         with mock.patch('slumber.Resource.post') as slumber_post:
             slumber_post.return_value = expected_note_output
             note_dict = api.note.post({'title': 'a title', 'content': 'hello'})
