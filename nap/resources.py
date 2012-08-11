@@ -35,6 +35,7 @@ class DataModelMetaClass(type):
             'update_from_write': getattr(options, 'update_from_write', True),
             'update_method': getattr(options, 'update_method', 'PUT'),
             'auth': getattr(options, 'auth', ()),
+            'collection_field': getattr(options, 'collection_field', None),
 
             'valid_get_status': getattr(options, 'valid_get_status', (200,)),
             'valid_update_status': getattr(options, 'valid_update_status', (204,)),
@@ -291,7 +292,15 @@ class ResourceModel(object):
             raise ValueError('http error')
 
         serializer = tmp_obj.get_serializer()
-        obj_list = serializer.deserialize(r.content)
+        r_data = serializer.deserialize(r.content)
+        collection_field = cls._meta.get('collection_field')
+        print collection_field
+        if collection_field:
+            obj_list = r_data[collection_field]
+        else:
+            obj_list = r_data
+
+        print obj_list
 
         if not hasattr(obj_list, '__iter__'):
             raise ValueError('excpeted array-type response')
@@ -299,6 +308,13 @@ class ResourceModel(object):
         resource_list = [cls(**obj_dict) for obj_dict in obj_list]
 
         return resource_list
+
+    def validate_collection_response(self, response):
+        """Validate get response is valid to use for updating our object
+        """
+        if response.status_code not in self._meta['valid_get_status']:
+            raise ValueError("Expected status code in %s, got %s" %\
+                (self._meta['valid_get_status'], response.status_code))
 
     # write methods
     def update(self, **kwargs):

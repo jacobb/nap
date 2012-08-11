@@ -136,6 +136,30 @@ class TestResourceModelAccessMethods(object):
         assert rm.title == 'new title'
 
 
+class TestResourceCollectionMethods(object):
+
+    def test_collection_field(self):
+
+        SampleResourceModel._meta['collection_field'] = 'objects'
+        with mock.patch('requests.request') as request:
+            r = mock.Mock()
+            collection_dict = {
+                'meta': {'something': True},
+                'objects': [
+                    {'title': 'a'},
+                    {'title': 'b', 'content': "b's content"},
+                    {'title': 'c'},
+                ]
+            }
+            r.content = json.dumps(collection_dict)
+            r.status_code = 200
+            request.return_value = r
+            objects = SampleResourceModel.all()
+            assert request.called
+        assert len(objects) == 3
+        SampleResourceModel._meta['collection_field'] = None
+
+
 class TestSerialize(object):
 
     def test_serialize(self):
