@@ -112,4 +112,4 @@ We call the parent handle_create_response to let it handle the default behavior 
 
 And there we have it! A feature-full interface to our REST API.
 
-In the next step, We'll go into handling a REST-like, but slightly off spec, REST API with some further tweaks.
+In the :doc:`next step<tutorial2>`, We'll go into handling a REST-like, but slightly off spec, REST API with some further tweaks.
