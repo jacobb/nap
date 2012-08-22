@@ -1,3 +1,6 @@
+import datetime
+
+
 class Field(object):
 
     def __init__(self, api_name=None, default=None, resource_id=False, readonly=None):
@@ -14,10 +17,30 @@ class Field(object):
         return self.default
 
     def scrub_value(self, val):
+        """Turn post-deserialized data into the expected end value
+        """
         return val
 
     def descrub_value(self, val):
+        """Turn python data into a serializer-friendly format
+        """
         return val
+
+
+class DateTimeField(Field):
+
+    def __init__(self, *args, **kwargs):
+        iso_8601 = "%Y-%m-%dT%H:%M:%S"
+        self.dt_format = kwargs.pop('dt_format', iso_8601)
+        super(Field, self).__init__(*args, **kwargs)
+
+    def scrub_value(self, val):
+        if '.' in val:
+            val = val.split('.')[0]
+        return datetime.datetime.strptime(val, self.dt_format)
+
+    def descrub_value(self, val):
+        return datetime.datetime.strftime(val, self.dt_format)
 
 
 class ResourceField(Field):
@@ -74,11 +97,11 @@ class DictField(ResourceField):
         return resource_dict
 
     def descrub_value(self, val):
-            """
-            Val should be a string representing a resource_model object
-            """
+        """
+        Val should be a string representing a resource_model object
+        """
 
-            resource_dict = dict([
-                (k, v.to_python()) for (k, v) in val.iteritems()
-            ])
-            return resource_dict
+        resource_dict = dict([
+            (k, v.to_python()) for (k, v) in val.iteritems()
+        ])
+        return resource_dict

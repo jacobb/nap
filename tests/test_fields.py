@@ -1,5 +1,8 @@
+import datetime
+
 from . import AuthorModel
-from nap.fields import Field, ResourceField, ListField, DictField
+from nap.fields import (Field, ResourceField, ListField,
+        DictField, DateTimeField)
 
 
 class TestFields(object):
@@ -92,3 +95,34 @@ class TestFields(object):
 
         new_author_dict_dict = field.descrub_value(resource_dict)
         assert new_author_dict_dict == author_dict_dict
+
+    def test_datetime_field(self):
+
+        field = DateTimeField()
+
+        dt_str = '2012-08-21T22:30:14'
+        expected_dt = datetime.datetime(year=2012, month=8, day=21,
+                                        hour=22, minute=30, second=14)
+        assert field.scrub_value(dt_str) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+        # make sure microseconds is stripped
+        micro_dt_str = '2012-08-21T22:30:14.24234234'
+        assert field.scrub_value(micro_dt_str) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+    def test_datetime_field_new_dt_format(self):
+
+        boring_format = "%Y-%m-%d %H:%M:%S"
+        field = DateTimeField(dt_format=boring_format)
+
+        dt_str = '2010-06-02 16:30:06'
+        expected_dt = datetime.datetime(year=2010, month=6, day=2,
+                                        hour=16, minute=30, second=6)
+        assert field.scrub_value(dt_str) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+        # make sure microseconds is stripped
+        micro_dt_str = '2010-06-02 16:30:06.24234234'
+        assert field.scrub_value(micro_dt_str) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str

@@ -453,6 +453,8 @@ class ResourceModel(object):
     @property
     def resource_id(self):
         "Return object's resource_id value. Returns None if not available"
+        if not self._resource_id_name:
+            return None
         return getattr(self, self._resource_id_name, None)
 
     @resource_id.setter
