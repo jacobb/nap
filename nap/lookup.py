@@ -12,6 +12,8 @@ class LookupURL(object):
         Setup necesary URL meta options
         """
 
+        #  TODO: should lookup default to False?
+
         self.url_string = url_string
         if params is None:
             params = []

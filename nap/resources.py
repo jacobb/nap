@@ -1,3 +1,4 @@
+from .conf import NapConfig
 from .fields import Field
 from .http import NapRequest
 from .lookup import default_lookup_urls
@@ -26,21 +27,12 @@ class DataModelMetaClass(type):
 
         urls = prepend_urls + urls + append_urls
 
-        _meta = {
-            'resource_name': resource_name,
-            'root_url': getattr(options, 'root_url', None),
-            'urls': urls,
-            'resource_id_field_name': None,
-            'add_slash': getattr(options, 'add_slash', True),
-            'update_from_write': getattr(options, 'update_from_write', True),
-            'update_method': getattr(options, 'update_method', 'PUT'),
-            'auth': getattr(options, 'auth', ()),
-            'collection_field': getattr(options, 'collection_field', None),
+        _meta = NapConfig(
+            resource_name=resource_name,
+            urls=urls,
+        )
 
-            'valid_get_status': getattr(options, 'valid_get_status', (200,)),
-            'valid_update_status': getattr(options, 'valid_update_status', (204,)),
-            'valid_create_status': getattr(options, 'valid_create_status', (201,)),
-        }
+        _meta.from_class(options)
 
         for name, attr in attrs.iteritems():
             if isinstance(attr, Field):

@@ -32,7 +32,7 @@ class DateTimeField(Field):
     def __init__(self, *args, **kwargs):
         iso_8601 = "%Y-%m-%dT%H:%M:%S"
         self.dt_format = kwargs.pop('dt_format', iso_8601)
-        super(Field, self).__init__(*args, **kwargs)
+        super(DateTimeField, self).__init__(*args, **kwargs)
 
     def scrub_value(self, val):
         if '.' in val:
