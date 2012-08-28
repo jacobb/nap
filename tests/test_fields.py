@@ -73,6 +73,16 @@ class TestFields(object):
 
         assert new_author_dict_list == author_dict_list
 
+    def test_empty_list_field(self):
+        field = ListField(AuthorModel)
+        assert field.scrub_value([]) == []
+        assert field.scrub_value(None) == []
+
+    def test_empty_dict_field(self):
+        field = DictField(AuthorModel)
+        assert field.scrub_value({}) == {}
+        assert field.scrub_value(None) == {}
+
     def test_dict_field(self):
         field = DictField(AuthorModel)
         author_dict_dict = {
@@ -110,6 +120,11 @@ class TestFields(object):
         micro_dt_str = '2012-08-21T22:30:14.24234234'
         assert field.scrub_value(micro_dt_str) == expected_dt
         assert field.descrub_value(expected_dt) == dt_str
+
+    def test_empty_datetime_field(self):
+
+        field = DateTimeField()
+        assert field.scrub_value(None) == None
 
     def test_datetime_field_new_dt_format(self):
 

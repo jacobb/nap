@@ -35,6 +35,10 @@ class DateTimeField(Field):
         super(DateTimeField, self).__init__(*args, **kwargs)
 
     def scrub_value(self, val):
+
+        if not val:
+            return None
+
         if '.' in val:
             val = val.split('.')[0]
         return datetime.datetime.strptime(val, self.dt_format)
@@ -76,6 +80,8 @@ class ListField(ResourceField):
 
     def scrub_value(self, val):
 
+        if not val:
+            return []
         resource_list = [self.coerce(v) for v in val]
         return resource_list
 
@@ -90,6 +96,9 @@ class DictField(ResourceField):
         """
         Val should be a string representing a resource_model object
         """
+
+        if not val:
+            return {}
 
         resource_dict = dict([
             (k, self.coerce(v)) for (k, v) in val.iteritems()
