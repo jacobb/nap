@@ -1,4 +1,5 @@
 import datetime
+import pytest
 
 from . import AuthorModel
 from nap.fields import (Field, ResourceField, ListField,
@@ -136,6 +137,18 @@ class TestFields(object):
                                         hour=16, minute=30, second=6)
         assert field.scrub_value(dt_str) == expected_dt
         assert field.descrub_value(expected_dt) == dt_str
+
+        field = DateTimeField(dt_formats=(boring_format, "%Y-%m-%dT%H:%M:%S"))
+        dt_str2 = '2010-06-02T16:30:06'
+        bad_string = "2010/06/02 16:30 06 seconds"
+        expected_dt = datetime.datetime(year=2010, month=6, day=2,
+                                        hour=16, minute=30, second=6)
+        assert field.scrub_value(dt_str) == expected_dt
+        assert field.scrub_value(dt_str2) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+        with pytest.raises(ValueError):
+            field.scrub_value(bad_string)
 
         # make sure microseconds is stripped
         micro_dt_str = '2010-06-02 16:30:06.24234234'

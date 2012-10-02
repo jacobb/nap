@@ -1,5 +1,7 @@
 import datetime
 
+from .utils import is_string_like
+
 
 class Field(object):
 
@@ -31,7 +33,15 @@ class DateTimeField(Field):
 
     def __init__(self, *args, **kwargs):
         iso_8601 = "%Y-%m-%dT%H:%M:%S"
-        self.dt_format = kwargs.pop('dt_format', iso_8601)
+        try:
+            dt_formats = kwargs.pop('dt_format')
+        except KeyError:
+            dt_formats = kwargs.pop('dt_formats', (iso_8601,))
+
+        if is_string_like(dt_formats):
+            dt_formats = (dt_formats,)
+
+        self.dt_formats = dt_formats
         super(DateTimeField, self).__init__(*args, **kwargs)
 
     def scrub_value(self, val):
@@ -41,10 +51,21 @@ class DateTimeField(Field):
 
         if '.' in val:
             val = val.split('.')[0]
-        return datetime.datetime.strptime(val, self.dt_format)
+
+        for format in self.dt_formats:
+            try:
+                scrubed_val = datetime.datetime.strptime(val, format)
+            except ValueError:
+                continue
+            else:
+                break
+        else:
+            raise ValueError("%s is not a valid time format" % val)
+        return scrubed_val
 
     def descrub_value(self, val):
-        return datetime.datetime.strftime(val, self.dt_format)
+        dt_format = self.dt_formats[0]
+        return datetime.datetime.strftime(val, dt_format)
 
 
 class ResourceField(Field):

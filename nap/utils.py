@@ -20,3 +20,10 @@ def make_url(base_url, params=None, add_slash=None):
         base_url = "%s?%s" % (base_url, param_string)
 
     return base_url
+
+
+def is_string_like(obj):
+    try:
+        return isinstance(obj, basestring)
+    except NameError:
+        return isinstance(obj, str)
