@@ -64,6 +64,8 @@ class DateTimeField(Field):
         return scrubed_val
 
     def descrub_value(self, val):
+        if not val:
+            return None
         dt_format = self.dt_formats[0]
         return datetime.datetime.strftime(val, dt_format)
 

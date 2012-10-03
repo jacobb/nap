@@ -126,6 +126,7 @@ class TestFields(object):
 
         field = DateTimeField()
         assert field.scrub_value(None) == None
+        assert field.descrub_value(None) == None
 
     def test_datetime_field_new_dt_format(self):
 
