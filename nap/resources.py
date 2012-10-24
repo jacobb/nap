@@ -399,23 +399,27 @@ class ResourceModel(object):
             self.create(**kwargs)
 
     # utility methods
-    def to_python(self, for_write=True):
+    def to_python(self, for_read=False):
         """Converts editable field data to a python dictionary
+
+        :param for_read: include readonly fields.
         """
         obj_dict = dict([
             (field_name, field.descrub_value(getattr(self, field_name)))
             for field_name, field in self._meta['fields'].iteritems()
-            if for_write and field.readonly is False
+            if for_read or field.readonly is False
         ])
 
         return obj_dict
 
-    def serialize(self, for_write=True):
+    def serialize(self, for_read=False):
         """Convert field data of `self` to the appropriate string serialization format
+
+        :param for_read: include readonly fields.
         """
 
         serializer = self.get_serializer()
-        return serializer.serialize(self.to_python(for_write=for_write))
+        return serializer.serialize(self.to_python(for_read=for_read))
 
     def deserialize(self, val_str):
         """Converts a string into a python dictionary appropriate for

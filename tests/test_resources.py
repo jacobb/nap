@@ -163,12 +163,30 @@ class TestResourceCollectionMethods(object):
 class TestSerialize(object):
 
     def test_serialize(self):
-        dm = SampleResourceModel(title='test title', content='test content')
+        dm = SampleResourceModel(
+            slug='123',
+            title='test title',
+            content='test content'
+        )
         json_string = dm.serialize()
         obj_dict = json.loads(json_string)
         assert obj_dict['title'] == 'test title'
         assert obj_dict['content'] == 'test content'
         assert obj_dict['alt_name'] == None
+        assert 'slug' not in obj_dict
+
+    def test_serialize_for_write_false(self):
+        dm = SampleResourceModel(
+            slug='123',
+            title='test title',
+            content='test content'
+        )
+        json_string = dm.serialize(for_read=True)
+        obj_dict = json.loads(json_string)
+        assert obj_dict['title'] == 'test title'
+        assert obj_dict['content'] == 'test content'
+        assert obj_dict['alt_name'] == None
+        assert obj_dict['slug'] == '123'
 
 
 class TestResourceModelWriteMethods(unittest.TestCase):
