@@ -109,6 +109,8 @@ class ListField(ResourceField):
         return resource_list
 
     def descrub_value(self, val):
+        if not val:
+            return []
         obj_list = [obj.to_python() for obj in val]
         return obj_list
 
@@ -132,7 +134,8 @@ class DictField(ResourceField):
         """
         Val should be a string representing a resource_model object
         """
-
+        if not val:
+            return {}
         resource_dict = dict([
             (k, v.to_python()) for (k, v) in val.iteritems()
         ])
