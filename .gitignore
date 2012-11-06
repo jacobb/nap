@@ -7,4 +7,7 @@ _build
 __pycache__
 scratch.py
 secret.py
+build
+dist
+*egg-info
 
