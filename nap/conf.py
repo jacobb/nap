@@ -1,6 +1,8 @@
 """
 Kudos to mitsuhiko for flask's configuration for inspiring much of this
 """
+import logging
+
 
 DEFAULT_CONFIG = {
     'resource_name': None,
@@ -16,6 +18,7 @@ DEFAULT_CONFIG = {
     'valid_get_status': (200,),
     'valid_update_status': (204,),
     'valid_create_status': (201,),
+    'log_level': 'CRITICAL',
 }
 
 REQUIRED_CONFIG = ('resource_name', 'urls')
@@ -31,6 +34,18 @@ class NapConfig(dict):
 
         config.update(conf)
         config.update(kwargs)
+        logger = logging.getLogger()
+        log_level = getattr(logging, config['log_level'])
+        logger.setLevel(log_level)
+
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+
+        config['logger'] = logger
 
         dict.__init__(self, config)
 

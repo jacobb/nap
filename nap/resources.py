@@ -151,6 +151,7 @@ class ResourceModel(object):
             raise ValueError("Nap requests require root_url to be defined")
 
         full_url = "%s%s" % (root_url, url)
+        self.logger.info("Trying to hit %s" % full_url)
         request = NapRequest(request_method, full_url, *args, **kwargs)
 
         for auth in self._meta['auth']:
@@ -445,6 +446,10 @@ class ResourceModel(object):
     @property
     def _resource_id_name(self):
         return self._meta.get('resource_id_field_name', None)
+
+    @property
+    def logger(self):
+        return self._meta['logger']
 
     @property
     def resource_id(self):
