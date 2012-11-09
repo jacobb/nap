@@ -3,6 +3,8 @@ Kudos to mitsuhiko for flask's configuration for inspiring much of this
 """
 import logging
 
+from .cache.base import BaseCacheBackend
+
 
 DEFAULT_CONFIG = {
     'resource_name': None,
@@ -19,6 +21,8 @@ DEFAULT_CONFIG = {
     'valid_update_status': (204,),
     'valid_create_status': (201,),
     'log_level': 'CRITICAL',
+    'cache_backend': BaseCacheBackend(),
+    'cached_methods': ('GET', ),
 }
 
 REQUIRED_CONFIG = ('resource_name', 'urls')

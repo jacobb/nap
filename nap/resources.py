@@ -4,6 +4,7 @@ from .http import NapRequest
 from .lookup import default_lookup_urls
 from .serializers import JSONSerializer
 from .utils import make_url, handle_slash
+from .cache.base import CacheRequestsResponse
 
 
 class DataModelMetaClass(type):
@@ -157,7 +158,30 @@ class ResourceModel(object):
         for auth in self._meta['auth']:
             request = auth.handle_request(request)
 
+        # Handle cacheing, unless skipped
+        skip_cache = kwargs.get('skip_cache', False)
+
+        use_cache = request_method in self._meta['cached_methods']\
+                    and not skip_cache
+
+        if use_cache:
+            self.logger.debug("Trying to get cached response for %s" % url)
+            cached_response = self.cache.get(request)
+            if cached_response:
+                self.logger.debug("Got cached response for %s" % url)
+                return cached_response
+
         resource_response = request.send()
+
+        if use_cache:
+            self.logger.debug("Setting response into cache for %s" % url)
+            # requests.Response is not easily cached, and contains things we
+            # don't need to remember. So let's cache a thin wrapper around
+            # its content
+            cached_response = CacheRequestsResponse(
+                content=resource_response.content,
+                status_code=resource_response.status_code)
+            self.cache.set(request, cached_response)
 
         return resource_response
 
@@ -450,6 +474,10 @@ class ResourceModel(object):
     @property
     def logger(self):
         return self._meta['logger']
+
+    @property
+    def cache(self):
+        return self._meta['cache_backend']
 
     @property
     def resource_id(self):
