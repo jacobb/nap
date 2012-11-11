@@ -1,4 +1,8 @@
-from django.core.cache import cache
+try:
+    from django.core.cache import cache
+except ImportError as e:
+    raise ImportError("Error loading django cache module: %s" % e)
+
 
 from .base import BaseCacheBackend
 
