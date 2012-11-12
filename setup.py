@@ -15,6 +15,7 @@ setup(
     packages=find_packages(),
     requires=[
     ],
+    zip_safe=False,
     tests_require=test_requirements,
     install_requires=[
         'slumber>=0.4.2',
