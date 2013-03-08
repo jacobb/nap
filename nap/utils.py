@@ -2,10 +2,15 @@ import urllib
 
 
 def handle_slash(url, add_slash=None):
-    if add_slash and not url.endswith('/'):
-        url = "%s/" % url
-    elif add_slash is False and url.endswith('/'):
-        url = url[:-1]
+    split = url.split('?')
+
+    if add_slash and not split[0].endswith('/'):
+        if len(split) > 1:
+            url = "%s/?%s" % (split[0], split[1])
+        else:
+            url = "%s/" % url
+    elif add_slash is False and split[0].endswith('/'):
+        url = "%s?%s" % (split[0][:-1], split[1])
 
     return url
 
