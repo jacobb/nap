@@ -219,6 +219,13 @@ class ResourceModel(object):
         """
         return self._generate_url(url_type='create', **kwargs)
 
+    def get_delete_url(self, **kwargs):
+        """Generate a URL suitable for delete requests based on ``kwargs``
+
+        :param kwargs: URL lookup variables
+        """
+        return self._generate_url(url_type='delete', **kwargs)
+        
     # access methods
     @classmethod
     def get_from_uri(cls, url, *args, **kwargs):
@@ -389,6 +396,20 @@ class ResourceModel(object):
         self.validate_create_response(response)
         self.handle_create_response(response)
 
+    def delete(self, **kwargs):
+        """Sends a delete request to the API, validating and handling any
+        response received.
+
+        :param kwargs: keyword arguments passed to get_delete_url
+        """
+        headers = {'content-type': 'application/json'}
+
+        response = self._request('DELETE', self.get_delete_url(**kwargs),
+            headers=headers)
+
+        self.validate_delete_response(response)
+        self.handle_delete_response(response)
+        
     def validate_create_response(self, response):
         if response.status_code not in self._meta['valid_create_status']:
             raise ValueError
@@ -413,6 +434,21 @@ class ResourceModel(object):
         except ValueError:
             return
 
+    def validate_create_response(self, response):
+        if response.status_code not in self._meta['valid_delete_status']:
+            raise ValueError
+            
+    def handle_delete_response(self, response):
+        """Handle any actions needed after a HTTP response has been validated
+        for a delete action
+
+        Intended for easy subclassing. By default, attempt to update the
+        current object from the response's content
+
+        :param response: a requests.Response object
+        """
+        pass  # Need some guidence here Jacob ...
+            
     def save(self, **kwargs):
         """Contextually save current object. If an object can generate an
         update URL, send an update command. Otherwise, create
