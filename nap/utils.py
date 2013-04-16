@@ -10,7 +10,10 @@ def handle_slash(url, add_slash=None):
         else:
             url = "%s/" % url
     elif add_slash is False and split[0].endswith('/'):
-        url = "%s?%s" % (split[0][:-1], split[1])
+        if len(split) > 1:
+            url = "%s?%s" % (split[0][:-1], split[1])
+        else:
+            url = split[0][:-1]
 
     return url
 
