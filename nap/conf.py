@@ -20,7 +20,7 @@ DEFAULT_CONFIG = {
     'valid_get_status': (200,),
     'valid_update_status': (204,),
     'valid_create_status': (201,),
-    'valid_delete_status': (200,202,204),
+    'valid_delete_status': (200, 202, 204),
     'log_level': 'CRITICAL',
     'cache_backend': BaseCacheBackend(),
     'cached_methods': ('GET', ),

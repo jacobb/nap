@@ -222,10 +222,12 @@ class ResourceModel(object):
     def get_delete_url(self, **kwargs):
         """Generate a URL suitable for delete requests based on ``kwargs``
 
+        By default, this is the first valid update URL.
+
         :param kwargs: URL lookup variables
         """
-        return self._generate_url(url_type='delete', **kwargs)
-        
+        return self._generate_url(url_type='update', **kwargs)
+
     # access methods
     @classmethod
     def get_from_uri(cls, url, *args, **kwargs):
@@ -243,7 +245,7 @@ class ResourceModel(object):
         request directly to that URL. otherwise, attempt a lookup request.
 
         :param uri: a string representing an API uri
-        :param kwargs: optional variables to send to \
+        :param kwargs: optional variables to send to
             :meth:`~nap.resources.ResourceClass.lookup`
         """
 
@@ -280,7 +282,7 @@ class ResourceModel(object):
         """Validate get response is valid to use for updating our object
         """
         if response.status_code not in self._meta['valid_get_status']:
-            raise ValueError("Expected status code in %s, got %s" %\
+            raise ValueError("Expected status code in %s, got %s" %
                 (self._meta['valid_get_status'], response.status_code))
 
     def handle_get_response(self, response):
@@ -334,7 +336,7 @@ class ResourceModel(object):
         """Validate get response is valid to use for updating our object
         """
         if response.status_code not in self._meta['valid_get_status']:
-            raise ValueError("Expected status code in %s, got %s" %\
+            raise ValueError("Expected status code in %s, got %s" %
                 (self._meta['valid_get_status'], response.status_code))
 
     # write methods
@@ -361,7 +363,7 @@ class ResourceModel(object):
     def validate_update_response(self, response):
         if response.status_code not in self._meta['valid_update_status']:
             raise ValueError("Invalid Update Response: expected stauts_code"
-                        " in %s, got %s" % \
+                        " in %s, got %s" %
                         (self._meta['valid_update_status'], response.status_code))
 
     def handle_update_response(self, r):
@@ -409,7 +411,7 @@ class ResourceModel(object):
 
         self.validate_delete_response(response)
         self.handle_delete_response(response)
-        
+
     def validate_create_response(self, response):
         if response.status_code not in self._meta['valid_create_status']:
             raise ValueError
@@ -434,10 +436,10 @@ class ResourceModel(object):
         except ValueError:
             return
 
-    def validate_create_response(self, response):
+    def validate_delete_response(self, response):
         if response.status_code not in self._meta['valid_delete_status']:
             raise ValueError
-            
+
     def handle_delete_response(self, response):
         """Handle any actions needed after a HTTP response has been validated
         for a delete action
@@ -447,8 +449,9 @@ class ResourceModel(object):
 
         :param response: a requests.Response object
         """
-        pass  # Need some guidence here Jacob ...
-            
+
+        self.resource_id = None
+
     def save(self, **kwargs):
         """Contextually save current object. If an object can generate an
         update URL, send an update command. Otherwise, create
