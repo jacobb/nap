@@ -312,13 +312,12 @@ class ResourceModel(object):
         """
         tmp_obj = cls()
         url = tmp_obj._generate_url(url_type='collection', **lookup_vars)
-        r = tmp_obj._request('GET', url)
+        response = tmp_obj._request('GET', url)
 
-        if r.status_code not in (200,):
-            raise ValueError('http error')
+        tmp_obj.validate_collection_response(response)
 
         serializer = tmp_obj.get_serializer()
-        r_data = serializer.deserialize(r.content)
+        r_data = serializer.deserialize(response.content)
         collection_field = cls._meta.get('collection_field')
         if collection_field:
             obj_list = r_data[collection_field]
