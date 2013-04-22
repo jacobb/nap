@@ -39,7 +39,7 @@ class NapConfig(dict):
 
         config.update(conf)
         config.update(kwargs)
-        logger = logging.getLogger()
+        logger = logging.getLogger('nap:%s' % config['resource_name'])
         log_level = getattr(logging, config['log_level'])
         logger.setLevel(log_level)
 
