@@ -179,7 +179,7 @@ class ResourceModel(object):
             use_cache=use_cache,
 
         )
-
+        # return resource_response
         return response
 
     # url methods
@@ -359,7 +359,7 @@ class ResourceModel(object):
 
     def validate_update_response(self, response):
         if response.status_code not in self._meta['valid_update_status']:
-            raise ValueError("Invalid Update Response: expected stauts_code"
+            raise ValueError("Invalid Update Response: expected status_code"
                         " in %s, got %s" %
                         (self._meta['valid_update_status'], response.status_code))
 

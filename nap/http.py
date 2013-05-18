@@ -3,9 +3,9 @@ import requests
 
 class NapResponse(object):
 
-    def __init__(self, content, url, status_code=200,
+    def __init__(self, content, url, status_code,
             use_cache=False, headers=None):
-        self.status_code = 200
+        self.status_code = status_code
         self.content = content
         self.url = url
         self.use_cache = use_cache
