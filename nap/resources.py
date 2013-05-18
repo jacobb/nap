@@ -1,10 +1,9 @@
 from .conf import NapConfig
 from .fields import Field
-from .http import NapRequest
+from .http import NapRequest, NapResponse
 from .lookup import default_lookup_urls
 from .serializers import JSONSerializer
 from .utils import make_url, handle_slash
-from .cache.base import CacheRequestsResponse
 
 
 class DataModelMetaClass(type):
@@ -172,18 +171,16 @@ class ResourceModel(object):
                 return cached_response
 
         resource_response = request.send()
+        response = NapResponse(
+            url=request.url,
+            status_code=resource_response.status_code,
+            headers=resource_response.headers,
+            content=resource_response.content,
+            use_cache=use_cache,
 
-        if use_cache:
-            self.logger.debug("Setting response into cache for %s" % url)
-            # requests.Response is not easily cached, and contains things we
-            # don't need to remember. So let's cache a thin wrapper around
-            # its content
-            cached_response = CacheRequestsResponse(
-                content=resource_response.content,
-                status_code=resource_response.status_code)
-            self.cache.set(request, cached_response)
+        )
 
-        return resource_response
+        return response
 
     # url methods
     @classmethod
@@ -293,6 +290,7 @@ class ResourceModel(object):
 
         self._raw_response_content = resource_data
         self.update_fields(resource_data)
+        self.handle_response(response)
 
     # collection access methods
     @classmethod
@@ -365,7 +363,7 @@ class ResourceModel(object):
                         " in %s, got %s" %
                         (self._meta['valid_update_status'], response.status_code))
 
-    def handle_update_response(self, r):
+    def handle_update_response(self, response):
         """Handle any actions needed after a HTTP response has been validated
         for an update action
 
@@ -374,13 +372,15 @@ class ResourceModel(object):
 
         :param response: a requests.Response object
         """
-        if not self._meta['update_from_write'] or not r.content:
+        if not self._meta['update_from_write'] or not response.content:
             return
 
         try:
-            self.update_fields(r.content)
+            self.update_fields(response.content)
         except ValueError:
             return
+
+        self.handle_response(response)
 
     def create(self, **kwargs):
         """Sends a create request to the API, validating and handling any
@@ -435,6 +435,8 @@ class ResourceModel(object):
         except ValueError:
             return
 
+        self.handle_response(response)
+
     def validate_delete_response(self, response):
         if response.status_code not in self._meta['valid_delete_status']:
             raise ValueError
@@ -450,6 +452,7 @@ class ResourceModel(object):
         """
 
         self.resource_id = None
+        self.handle_response(response)
 
     def save(self, **kwargs):
         """Contextually save current object. If an object can generate an
@@ -498,6 +501,18 @@ class ResourceModel(object):
 
     def get_serializer(self):
         return JSONSerializer()
+
+    def handle_response(self, response):
+        """
+        Default handler for all response types. Ran as the last step in a
+        request/response cycle
+        """
+        if response.use_cache:
+            self.logger.debug("Setting response into cache for %s" % response.url)
+            # requests.Response is not easily cached, and contains things we
+            # don't need to remember. So let's cache a thin wrapper around
+            # its content
+            self.cache.set(response)
 
     # properties
     @property

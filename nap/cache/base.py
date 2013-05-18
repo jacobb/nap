@@ -11,10 +11,10 @@ class BaseCacheBackend(object):
         self.obey_cache_headers = obey_cache_headers
         self.default_timeout = default_timeout
 
-    def get(self, request):
+    def get(self, response):
         return None
 
-    def set(self, request, value):
+    def set(self, response):
         return None
 
     def get_timeout_from_header(self, response):
@@ -25,13 +25,14 @@ class BaseCacheBackend(object):
         cache_header_age = re.search(r'max\-?age=(\d+)', cache_headers)
         return int(cache_header_age.group(1))
 
-    def get_cache_key(self, request, **kwargs):
+    def get_cache_key(self, response, **kwargs):
 
         key_parts = {
-            'url': request.url
+            'url': response.url
         }
 
         cache_key = "%(url)s" % key_parts
+        print cache_key
 
         return cache_key
 
@@ -43,10 +44,3 @@ class BaseCacheBackend(object):
                 return header_timeout
 
         return self.default_timeout
-
-
-class CacheRequestsResponse(object):
-
-    def __init__(self, content, status_code=200):
-        self.status_code = 200
-        self.content = content

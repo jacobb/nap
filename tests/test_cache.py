@@ -1,4 +1,5 @@
 import mock
+import pytest
 
 from nap.cache.base import BaseCacheBackend, DEFAULT_TIMEOUT
 
@@ -42,9 +43,9 @@ class TestBaseCacheBackend(object):
 
     def test_get_cache_key(self):
 
-        mock_request = self.get_fake_request()
+        mock_response = self.get_fake_response()
         cache_backend = self.get_backend()
-        key = cache_backend.get_cache_key(mock_request)
+        key = cache_backend.get_cache_key(mock_response)
         assert key == 'http://www.foo.com/bar/'
 
     def test_get_timeout_from_header(self):
@@ -81,3 +82,16 @@ class TestBaseCacheBackend(object):
         )
         timeout = cache_backend.get_timeout(mock_response)
         assert timeout == 42
+
+
+class TestDjangoCacheBackend(TestBaseCacheBackend):
+
+    def get_backend(self, **kwargs):
+
+        django_cache = pytest.importorskip("nap.cache.django_cache")
+        defaults = {
+            'default_timeout': DEFAULT_TIMEOUT,
+            'obey_cache_headers': True,
+        }
+        defaults.update(kwargs)
+        return django_cache.DjangoCacheBackend(**defaults)

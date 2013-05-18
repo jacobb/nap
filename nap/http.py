@@ -1,6 +1,19 @@
 import requests
 
 
+class NapResponse(object):
+
+    def __init__(self, content, url, status_code=200,
+            use_cache=False, headers=None):
+        self.status_code = 200
+        self.content = content
+        self.url = url
+        self.use_cache = use_cache
+        if not headers:
+            headers = {}
+        self.headers = headers
+
+
 class NapRequest(object):
 
     """
@@ -11,7 +24,7 @@ class NapRequest(object):
     VALID_HTTP_METHODS = ('GET', 'POST', 'PUT', 'DELETE', 'PATCH')
 
     def __init__(self, method, url, data=None, headers=None, auth=None,
-        *args, **kwargs):
+            *args, **kwargs):
 
         self._method = method
         self.url = url
@@ -40,6 +53,6 @@ class NapRequest(object):
             headers=self.headers,
             auth=self.auth,
             *self.extra_args,
-            **self.extra_kwargs
-        )
+            **self.extra_kwargs)
+
         return response
