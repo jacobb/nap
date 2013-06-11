@@ -321,15 +321,25 @@ class ResourceModel(object):
         collection_field = cls._meta.get('collection_field')
         if collection_field:
             obj_list = r_data[collection_field]
+
+            extra_data = r_data.copy()
+            del(extra_data[collection_field])
+
         else:
             obj_list = r_data
+            extra_data = {}
 
         if not hasattr(obj_list, '__iter__'):
             raise ValueError('excpeted array-type response')
 
+        class ListWithAttributes(list):
+            def __init__(self, list_vals, extra_data):
+                super(ListWithAttributes, self).__init__()
+                self.extend(list_vals)
+                self.extra_data = extra_data
+        
         resource_list = [cls(**obj_dict) for obj_dict in obj_list]
-
-        return resource_list
+        return ListWithAttributes(resource_list, extra_data)
 
     def validate_collection_response(self, response):
         """Validate get response is valid to use for updating our object
