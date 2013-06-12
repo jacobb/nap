@@ -6,6 +6,12 @@ from .serializers import JSONSerializer
 from .utils import make_url, handle_slash
 from .cache.base import CacheRequestsResponse
 
+class ListWithAttributes(list):
+    def __init__(self, list_vals, extra_data):
+        super(ListWithAttributes, self).__init__()
+        self.extend(list_vals)
+        self.extra_data = extra_data
+
 
 class DataModelMetaClass(type):
 
@@ -332,12 +338,6 @@ class ResourceModel(object):
         if not hasattr(obj_list, '__iter__'):
             raise ValueError('excpeted array-type response')
 
-        class ListWithAttributes(list):
-            def __init__(self, list_vals, extra_data):
-                super(ListWithAttributes, self).__init__()
-                self.extend(list_vals)
-                self.extra_data = extra_data
-        
         resource_list = [cls(**obj_dict) for obj_dict in obj_list]
         return ListWithAttributes(resource_list, extra_data)
 
