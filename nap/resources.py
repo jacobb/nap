@@ -67,7 +67,7 @@ class ResourceModel(object):
 
         self._raw_field_data = field_data
         if not hasattr(field_data, 'keys'):
-            # field_Data is not a map-like object, so let's try coercing it
+            # field_data is not a map-like object, so let's try coercing it
             # from a string
             serializer = self.get_serializer()
             field_data = serializer.deserialize(field_data)
@@ -278,6 +278,8 @@ class ResourceModel(object):
     def validate_get_response(self, response):
         """Validate get response is valid to use for updating our object
         """
+
+        self.validate_response(response)
         if response.status_code not in self._meta['valid_get_status']:
             raise ValueError("Expected status code in %s, got %s" %
                 (self._meta['valid_get_status'], response.status_code))
@@ -332,6 +334,8 @@ class ResourceModel(object):
     def validate_collection_response(self, response):
         """Validate get response is valid to use for updating our object
         """
+
+        self.validate_response(response)
         if response.status_code not in self._meta['valid_get_status']:
             raise ValueError("Expected status code in %s, got %s" %
                 (self._meta['valid_get_status'], response.status_code))
@@ -358,6 +362,8 @@ class ResourceModel(object):
         self.handle_update_response(response)
 
     def validate_update_response(self, response):
+
+        self.validate_response(response)
         if response.status_code not in self._meta['valid_update_status']:
             raise ValueError("Invalid Update Response: expected status_code"
                         " in %s, got %s" %
@@ -412,6 +418,8 @@ class ResourceModel(object):
         self.handle_delete_response(response)
 
     def validate_create_response(self, response):
+
+        self.validate_response(response)
         if response.status_code not in self._meta['valid_create_status']:
             raise ValueError
 
@@ -438,6 +446,8 @@ class ResourceModel(object):
         self.handle_response(response)
 
     def validate_delete_response(self, response):
+
+        self.validate_response(response)
         if response.status_code not in self._meta['valid_delete_status']:
             raise ValueError
 
@@ -502,6 +512,15 @@ class ResourceModel(object):
     def get_serializer(self):
         return JSONSerializer()
 
+    def validate_response(self, response):
+        """
+        Default validator for all response types.
+
+        By default does nothing, but gives a all-around hook for subclasses
+        to use
+        """
+        pass
+
     def handle_response(self, response):
         """
         Default handler for all response types. Ran as the last step in a
@@ -548,7 +567,7 @@ class ResourceModel(object):
 
     # etc
     def __unicode__(self):
-        return "<%s: %s>" % (self.__class__.__name__, self.resource_id)
+        return unicode(self.resource_id)
 
     def __repr__(self):
-        return unicode(self)
+        return "<%s: %s>" % (self.__class__.__name__, self.__unicode__())
