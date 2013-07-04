@@ -16,6 +16,7 @@ DEFAULT_CONFIG = {
     'update_from_write': True,
     'update_method': 'PUT',
     'auth': (),
+    'middleware': (),
     'collection_field': None,
     'valid_get_status': (200,),
     'valid_update_status': (204,),
@@ -51,6 +52,11 @@ class NapConfig(dict):
         logger.addHandler(ch)
 
         config['logger'] = logger
+
+        # Backwards compatible issue: middleware is now generic and not just
+        # for auth. Add all auth to the end of middleware so they are the
+        # last middleware classes ran
+        config['middleware'] += config['auth']
 
         dict.__init__(self, config)
 

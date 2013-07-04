@@ -1,10 +1,9 @@
 import re
+from .middleware import BaseMiddleware
 
 
-class BaseAuthorization(object):
-
-    def handle_request(self, request):
-        return request
+class BaseAuthorization(BaseMiddleware):
+    pass
 
 
 class HttpAuthorization(BaseAuthorization):

@@ -1,4 +1,5 @@
 from nap.conf import NapConfig, DEFAULT_CONFIG
+from nap.auth import BaseAuthorization
 
 
 def test_config_defaults():
@@ -23,7 +24,17 @@ def test_config_override():
 
     assert config['override_method'] == 'POST'
     assert config['collection_field'] == 'objects'
-    assert config['add_slash'] == False
+    assert config['add_slash'] is False
+
+
+def test_auth_added_to_middleware():
+
+    conf_dict = {
+        'auth': (BaseAuthorization,)
+    }
+    config = NapConfig(conf_dict)
+
+    assert config['middleware'] == conf_dict['auth']
 
 
 def test_config_from_class():

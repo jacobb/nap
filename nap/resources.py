@@ -160,8 +160,8 @@ class ResourceModel(object):
         self.logger.info("Trying to hit %s" % full_url)
         request = NapRequest(request_method, full_url, *args, **kwargs)
 
-        for auth in self._meta['auth']:
-            request = auth.handle_request(request)
+        for mw in self._meta['middleware']:
+            request = mw.handle_request(request)
 
         # Handle cacheing, unless skipped
         skip_cache = kwargs.get('skip_cache', False)
@@ -185,7 +185,10 @@ class ResourceModel(object):
             use_cache=use_cache,
 
         )
-        # return resource_response
+
+        for mw in reversed(self._meta['middleware']):
+            response = mw.handle_response(request, response)
+
         return response
 
     # url methods
@@ -233,6 +236,21 @@ class ResourceModel(object):
 
     # access methods
     @classmethod
+    def get(cls, uri=None, request_kwargs=None, **kwargs):
+        """Issues a get request to the API. If ``uri`` is passed, will send a
+        request directly to that URL. otherwise, attempt a lookup request.
+
+        :param uri: a string representing an API uri
+        :param kwargs: optional variables to send to
+            :meth:`~nap.resources.ResourceClass.lookup`
+        """
+
+        if uri:
+            return cls.get_from_uri(uri, request_kwargs=request_kwargs)
+
+        return cls.lookup(request_kwargs=request_kwargs, **kwargs)
+
+    @classmethod
     def get_from_uri(cls, url, *args, **kwargs):
         """Issues a get request to the API. Request is sent to the model's
         root_url + url keyword argument. \*args and \*\*kwargs are sent to `
@@ -243,29 +261,14 @@ class ResourceModel(object):
         return self
 
     @classmethod
-    def get(cls, uri=None, **kwargs):
-        """Issues a get request to the API. If ``uri`` is passed, will send a
-        request directly to that URL. otherwise, attempt a lookup request.
-
-        :param uri: a string representing an API uri
-        :param kwargs: optional variables to send to
-            :meth:`~nap.resources.ResourceClass.lookup`
-        """
-
-        if uri:
-            return cls.get_from_uri(uri)
-
-        return cls.lookup(**kwargs)
-
-    @classmethod
-    def lookup(cls, **lookup_vars):
+    def lookup(cls, request_kwargs=None, **lookup_vars):
         """Creates a get request to the API to the first URL found based on
         ``lookup_vars``
 
         :param lookup_vars: variables to send to get_lookup_url
         """
         uri = cls.get_lookup_url(**lookup_vars)
-        return cls.get_from_uri(uri)
+        return cls.get_from_uri(uri, request_kwargs=request_kwargs)
 
     def refresh(self, *args, **kwargs):
         url = self.full_url or self._generate_url(url_type='lookup')

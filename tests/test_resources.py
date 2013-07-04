@@ -99,7 +99,7 @@ class TestResourceModelAccessMethods(object):
     def test_lookup(self):
         with mock.patch('nap.resources.ResourceModel.get_from_uri') as get:
             SampleResourceModel.lookup(hello='hello_test', what='what_test')
-            get.assert_called_with('hello_test/what_test/')
+            get.assert_called_with('hello_test/what_test/', request_kwargs=None)
 
         SampleResourceModel._lookup_urls = []
 
