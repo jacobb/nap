@@ -32,7 +32,6 @@ class BaseCacheBackend(object):
         }
 
         cache_key = "%(url)s" % key_parts
-        print cache_key
 
         return cache_key
 
