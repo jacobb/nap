@@ -465,6 +465,10 @@ class ResourceEngine(object):
 
         return request_args
 
+    def modify_request(self, **kwargs):
+        self._tmp_request_args.update(kwargs)
+        return self
+
     @property
     def cache(self):
         return self.model._meta['cache_backend']
