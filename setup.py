@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 test_requirements = ['mock', ]
 setup(
     name='nap',
-    version="0.2.6",
+    version="0.3.0",
     description=('api access modeling and tools'),
     author="Jacob Burch",
     author_email="jacobburch@gmail.com",
@@ -18,7 +18,7 @@ setup(
     zip_safe=False,
     tests_require=test_requirements,
     install_requires=[
-        'slumber>=0.4.2',
+        'requests==1.2.3',
     ] + test_requirements,
     classifiers=[
         'Environment :: Web Environment',
