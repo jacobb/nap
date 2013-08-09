@@ -298,7 +298,7 @@ class ResourceEngine(object):
             return
 
         try:
-            obj = self.obj_from_response(response.content)
+            obj = self.obj_from_response(response)
         except ValueError:
             obj = None
 
@@ -354,7 +354,7 @@ class ResourceEngine(object):
             return
 
         try:
-            obj = self.obj_from_response(response.content)
+            obj = self.obj_from_response(response)
         except ValueError:
             obj = None
 
