@@ -94,14 +94,18 @@ class ResourceModel(object):
         """Contextually save current object. If an object can generate an
         update URL, send an update command. Otherwise, create
         """
+        def update_self(obj):
+            self.update_fields(obj._raw_field_data)
+            self.extra_data.update(obj.extra_data)
+        
         # this feels off to me, but it should work for now?
         update_url = self.objects.get_update_url(self)
         if self._saved or self.full_url or update_url:
             obj = self.objects.update(self, **kwargs)
-            self = obj
+            update_self(obj)
         else:
             obj = self.objects.create(self, **kwargs)
-            self = obj
+            update_self(obj)
 
     # utility methods
     def to_python(self, for_read=False):
