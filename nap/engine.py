@@ -73,7 +73,7 @@ class ResourceEngine(object):
         ]
         for url in valid_urls:
             field_values = dict([
-                (var, getattr(self, var))
+                (var, getattr(resource_obj, var))
                 for var in url.required_vars
                 if getattr(resource_obj, var, None)
             ])
@@ -298,7 +298,7 @@ class ResourceEngine(object):
             return
 
         try:
-            obj = self.obj_from_response(response.content)
+            obj = self.obj_from_response(response)
         except ValueError:
             obj = None
 
@@ -354,7 +354,7 @@ class ResourceEngine(object):
             return
 
         try:
-            obj = self.obj_from_response(response.content)
+            obj = self.obj_from_response(response)
         except ValueError:
             obj = None
 
