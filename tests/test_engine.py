@@ -90,10 +90,10 @@ class TestResourceEngineAccessMethods(object):
         assert self.engine._generate_url(url_type='create', resource_obj=rm) == 'note/'
 
         # assert that keyword arguments take precedence over meta arguments
-        essay_url = rm._generate_url(url_type='create', resource_name='essay')
+        essay_url = rm.objects._generate_url(url_type='create', resource_name='essay')
         assert essay_url == 'essay/'
 
-        assert rm._generate_url(url_type='update') == 'note/slug/'
+        assert rm.objects._generate_url(url_type='update') == 'note/slug/'
         # assert that keyword arguments take predecnce over field values
         new_slug_url = rm._generate_url(url_type='update', slug='new-slug')
         assert new_slug_url == 'note/new-slug/'

@@ -24,12 +24,16 @@ class DataModelMetaClass(type):
 
         urls = prepend_urls + urls + append_urls
 
+        meta_conf = {}
+        for key in dir(options):
+            if not key.startswith('__'):
+                meta_conf[key] = getattr(options, key)
+
         _meta = NapConfig(
+            meta_conf,
             resource_name=resource_name,
             urls=urls,
         )
-
-        _meta.from_class(options)
 
         for name, attr in attrs.iteritems():
             if isinstance(attr, Field):

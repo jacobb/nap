@@ -87,10 +87,3 @@ class NapConfig(dict):
         config['middleware'] += config['auth']
 
         dict.__init__(self, config)
-
-    def from_class(self, options):
-        """Convenience function to support the potentially deprecated use of
-        class Meta
-        """
-        for key in dir(options):
-            self[key] = getattr(options, key)

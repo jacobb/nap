@@ -35,16 +35,3 @@ def test_auth_added_to_middleware():
     config = NapConfig(conf_dict)
 
     assert config['middleware'] == conf_dict['auth']
-
-
-def test_config_from_class():
-
-    class Meta:
-        resource_name = 'gists'
-        root_url = 'https://api.github.com/'
-
-    config = NapConfig()
-    config.from_class(Meta)
-
-    assert config['resource_name'] == 'gists'
-    assert config['root_url'] == 'https://api.github.com/'
