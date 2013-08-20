@@ -48,6 +48,13 @@ class LookupURL(object):
         resource_uri = pattern % lookup_vars
         return resource_uri, extra_params
 
+        # etc
+    def __unicode__(self):
+        return unicode(self.url_string)
+
+    def __repr__(self):
+        return "<%s: %s>" % (self.__class__.__name__, self.__unicode__())
+
 
 def nap_url(*args, **kwargs):
     return LookupURL(*args, **kwargs)

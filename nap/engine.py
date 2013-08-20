@@ -453,9 +453,6 @@ class ResourceEngine(object):
         # Defined in Resource's config
         request_args = copy.deepcopy(self.model._meta['default_request_args'])
 
-        # Defined on a per-object level
-        # request_args.update(self._request_args)
-
         # Defined on a per-call level
         request_args.update(self._tmp_request_args)
 

@@ -3,10 +3,10 @@ import json
 
 class BaseSerializer(object):
 
-    def serialize(self):
+    def serialize(self, val_dict):
         raise NotImplementedError
 
-    def deserialize(self):
+    def deserialize(self, val_str):
         raise NotImplementedError
 
 
