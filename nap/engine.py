@@ -141,14 +141,14 @@ class ResourceEngine(object):
         """
         return self._generate_url(url_type='create', resource_obj=resource_obj, **kwargs)
 
-    def get_delete_url(self, **kwargs):
+    def get_delete_url(self, resource_obj=None, **kwargs):
         """Generate a URL suitable for delete requests based on ``kwargs``
 
         By default, this is the first valid update URL.
 
         :param kwargs: URL lookup variables
         """
-        return self._generate_url(url_type='update', **kwargs)
+        return self._generate_url(url_type='update', resource_obj=resource_obj, **kwargs)
 
     # access methods
     def get(self, uri=None, **kwargs):
@@ -322,14 +322,15 @@ class ResourceEngine(object):
         self.validate_create_response(response)
         return self.handle_create_response(response)
 
-    def delete(self, **kwargs):
+    def delete(self, resource_obj, **kwargs):
         """Sends a delete request to the API, validating and handling any
         response received.
 
         :param kwargs: keyword arguments passed to get_delete_url
         """
 
-        response = self._request('DELETE', self.get_delete_url(**kwargs))
+        delete_url  = self.get_delete_url(resource_obj, **kwargs)
+        response = self._request('DELETE', delete_url)
 
         self.validate_delete_response(response)
         self.handle_delete_response(response)

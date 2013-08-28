@@ -94,6 +94,16 @@ class ResourceModel(object):
         ])
 
 
+    def update(self, **kwargs):
+        """
+        Shortcut function to force an update on an object
+        """
+        obj = self.objects.update(self, **kwargs)
+        self.update_fields(obj._raw_field_data)
+
+    def delete(self, **kwargs):
+        self.objects.delete(self, **kwargs)
+
     def save(self, **kwargs):
         """Contextually save current object. If an object can generate an
         update URL, send an update command. Otherwise, create
