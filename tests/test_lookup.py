@@ -24,3 +24,14 @@ class TestLookupURL(object):
         assert 'hello' in lookup_url.required_vars
         assert 'what' in lookup_url.required_vars
         assert 'extra' in lookup_url.required_vars
+
+    def test_multiple_extra_params(self):
+
+        lookup_url = LookupURL(self.url_string)
+
+        url, extra = lookup_url.match(hello='hi', what='who', extra_extra=['one', 'two'])
+
+        extra_data = extra['extra_extra']
+        assert len(extra_data) == 2
+        assert 'one' in extra_data
+        assert 'two' in extra_data

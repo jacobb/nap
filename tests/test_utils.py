@@ -10,6 +10,9 @@ def test_no_params():
     url = make_url("http://www.google.com/")
     assert url == "http://www.google.com/"
 
+def test_multiple_params():
+    url = make_url("http://www.google.com/", params={'x': ['1', '2']})
+    assert url == "http://www.google.com/?x=1&x=2"
 
 def test_add_slash():
     url = "http://www.google.com"
