@@ -234,7 +234,7 @@ class ResourceEngine(object):
         serializer = self.get_serializer()
         r_data = serializer.deserialize(response.content)
         collection_field = self.model._meta.get('collection_field')
-        if collection_field:
+        if collection_field and collection_field in r_data:
             obj_list = r_data[collection_field]
 
             extra_data = r_data.copy()
