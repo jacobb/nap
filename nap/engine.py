@@ -272,7 +272,7 @@ class ResourceEngine(object):
             raise ValueError('No update url found')
 
         response = self._request(self.model._meta['update_method'], url,
-            data=self.serialize(resource_obj))
+            data=self.serialize(resource_obj, for_read=True))
 
         self.validate_update_response(response)
         return self.handle_update_response(response)
@@ -313,7 +313,7 @@ class ResourceEngine(object):
         :param kwargs: keyword arguments passed to get_create_url
         """
 
-        new_obj_data = self.serialize(resource_obj)
+        new_obj_data = self.serialize(resource_obj, for_read=True)
         response = self._request(
             'POST', self.get_create_url(resource_obj, **kwargs),
             data=new_obj_data
