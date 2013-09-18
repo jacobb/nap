@@ -124,7 +124,7 @@ class ResourceModel(object):
         :param for_read: include readonly fields.
         """
         obj_dict = dict([
-            (field_name, field.descrub_value(getattr(self, field_name)))
+            (field_name, field.descrub_value(getattr(self, field_name), for_read))
             for field_name, field in self._meta['fields'].iteritems()
             if for_read or field.readonly is False
         ])

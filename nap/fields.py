@@ -23,7 +23,7 @@ class Field(object):
         """
         return val
 
-    def descrub_value(self, val):
+    def descrub_value(self, val, for_read=False):
         """Turn python data into a serializer-friendly format
         """
         return val
@@ -63,7 +63,7 @@ class DateTimeField(Field):
             raise ValueError("%s is not a valid time format" % val)
         return scrubed_val
 
-    def descrub_value(self, val):
+    def descrub_value(self, val, for_read=False):
         if not val:
             return None
         dt_format = self.dt_formats[0]
@@ -93,7 +93,7 @@ class ResourceField(Field):
         resource = self.coerce(val)
         return resource
 
-    def descrub_value(self, val):
+    def descrub_value(self, val, for_read=False):
         if not val:
             return None
         return val.to_python()
@@ -108,10 +108,10 @@ class ListField(ResourceField):
         resource_list = [self.coerce(v) for v in val]
         return resource_list
 
-    def descrub_value(self, val):
+    def descrub_value(self, val, for_read=False):
         if not val:
             return []
-        obj_list = [obj.to_python() for obj in val]
+        obj_list = [obj.to_python(for_read=for_read) for obj in val]
         return obj_list
 
 
@@ -130,7 +130,7 @@ class DictField(ResourceField):
         ])
         return resource_dict
 
-    def descrub_value(self, val):
+    def descrub_value(self, val, for_read=False):
         """
         Val should be a string representing a resource_model object
         """
