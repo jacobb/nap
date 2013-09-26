@@ -109,11 +109,12 @@ class ResourceModel(object):
         update URL, send an update command. Otherwise, create
         """
 
+        request_kwargs = kwargs.pop('request_kwargs', {})
         update_url = self.objects.get_update_url(self)
         if self._saved or self.full_url or update_url:
-            obj = self.objects.update(self, **kwargs)
+            obj = self.objects.modify_request(**request_kwargs).update(self, **kwargs)
         else:
-            obj = self.objects.create(self, **kwargs)
+            obj = self.objects.modify_request(**request_kwargs).create(self, **kwargs)
 
         self.update_fields(obj._raw_field_data)
 
