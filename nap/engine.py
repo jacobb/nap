@@ -1,6 +1,7 @@
 import copy
 
 from .collection import ListWithAttributes
+from .exceptions import InvalidStatusError
 from .http import NapRequest, NapResponse
 from .serializers import JSONSerializer
 from .utils import handle_slash, make_url
@@ -200,8 +201,7 @@ class ResourceEngine(object):
 
         self.validate_response(response)
         if response.status_code not in self.model._meta['valid_get_status']:
-            raise ValueError("Expected status code in %s, got %s" %
-                (self.model._meta['valid_get_status'], response.status_code))
+            raise InvalidStatusError(self.model._meta['valid_get_status'], response)
 
     def handle_get_response(self, response):
         """Handle any actions needed after a HTTP Response has ben validated
@@ -245,7 +245,7 @@ class ResourceEngine(object):
             extra_data = {}
 
         if not hasattr(obj_list, '__iter__'):
-            raise ValueError('excpeted array-type response')
+            raise ValueError('expected array-type response')
 
         resource_list = [self.model(**obj_dict) for obj_dict in obj_list]
         return ListWithAttributes(resource_list, extra_data)
@@ -256,8 +256,7 @@ class ResourceEngine(object):
 
         self.validate_response(response)
         if response.status_code not in self.model._meta['valid_get_status']:
-            raise ValueError("Expected status code in %s, got %s" %
-                (self.model._meta['valid_get_status'], response.status_code))
+            raise InvalidStatusError(self.model._meta['valid_get_status'], response)
 
     # write methods
     def update(self, resource_obj, **kwargs):
@@ -281,9 +280,7 @@ class ResourceEngine(object):
 
         self.validate_response(response)
         if response.status_code not in self.model._meta['valid_update_status']:
-            raise ValueError("Invalid Update Response: expected status_code"
-                        " in %s, got %s" %
-                        (self.model._meta['valid_update_status'], response.status_code))
+            raise InvalidStatusError(self.model._meta['valid_update_status'], response)
 
     def handle_update_response(self, response):
         """Handle any actions needed after a HTTP response has been validated
@@ -339,7 +336,7 @@ class ResourceEngine(object):
 
         self.validate_response(response)
         if response.status_code not in self.model._meta['valid_create_status']:
-            raise ValueError
+            raise InvalidStatusError(self.model._meta['valid_create_status'], response)
 
     def handle_create_response(self, response):
         """Handle any actions needed after a HTTP response has been validated
@@ -367,7 +364,7 @@ class ResourceEngine(object):
 
         self.validate_response(response)
         if response.status_code not in self.model._meta['valid_delete_status']:
-            raise ValueError
+            raise InvalidStatusError(self.model._meta['valid_delete_status'], response)
 
     def handle_delete_response(self, response):
         """Handle any actions needed after a HTTP response has been validated
