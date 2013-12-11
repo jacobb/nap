@@ -253,7 +253,7 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
             r.status_code = 204
             put.return_value = r
             SampleResourceModel.objects.update(dm)
-            data = SampleResourceModel.objects.serialize(dm)
+            data = SampleResourceModel.objects.serialize(dm, for_read=True)
             put.assert_called_with('PUT', "http://foo.com/v1/expected_title/",
                 data=data, headers=self.headers, auth=None)
         SampleResourceModel._lookup_urls = []
@@ -263,7 +263,8 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
         # add a lookup url to ensure it doesn't get used
         dm = SampleResourceModel(
             title='expected_title',
-            content='Blank Content')
+            content='Blank Content',
+            slug='some_slug')
         with mock.patch('requests.request') as post:
             r = mock.Mock()
             r.content = ''
@@ -271,7 +272,7 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
             r.status_code = 201
             post.return_value = r
             SampleResourceModel.objects.create(dm)
-            data = SampleResourceModel.objects.serialize(dm)
+            data = SampleResourceModel.objects.serialize(dm, for_read=True)
             post.assert_called_with('POST', "http://foo.com/v1/note/",
                 data=data, headers=self.headers, auth=None)
         SampleResourceModel._lookup_urls = []
