@@ -64,10 +64,7 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
         self.engine.model._meta['urls'] = old_urls
 
 
-
-
 class TestResourceEngineAccessMethods(BaseResourceModelTest):
-
 
 
     def test_get_from_uri(self):
@@ -312,42 +309,21 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
             SampleResourceModel.objects.update(dm)
 
 
-# class TestResourceID(object):
 
-#     def test_resource_id_get(self):
-#         dm = SampleResourceModel(
-#             title='expected_title',
-#             content='Blank Content',
-#             slug='some-slug')
+def test_modify_request():
+    new_headers = {'test-header': '123'}
 
-#         assert dm.resource_id == 'some-slug'
+    with mock.patch('requests.request') as post:
+        r = mock.Mock()
+        r.content = '{}'
+        r.status_code = 200
+        post.return_value = r
+        SampleResourceModel.objects.modify_request(headers=new_headers).lookup(title=4)
+        post.assert_called_with(
+            'GET', "http://foo.com/v1/4/",
+            data=None,
+            headers=new_headers,
+            auth=None
+        )
 
-#     def test_resource_id_set(self):
-#         dm = SampleResourceModel(
-#             title='expected_title',
-#             content='Blank Content',
-#             slug='some-slug')
-
-#         dm.resource_id = 'a-new-slug'
-
-#         assert dm.slug == 'a-new-slug'
-
-#     def test_resource_id_lookup(self):
-#         resource_id_url = SampleResourceModel.get_lookup_url(slug='some-slug')
-
-#         assert resource_id_url == 'note/some-slug/'
-
-
-# class TestReourceEtcMethods(object):
-
-#     def test_repr(self):
-
-#         dm = SampleResourceModel(slug='some-slug')
-#         assert str(dm) == '<SampleResourceModel: some-slug>'
-
-
-# class TestResourceAuth(object):
-
-#     def test_meta_set(self):
-#         # SampleResourceModel
-#         pass
+    SampleResourceModel._lookup_urls = []
