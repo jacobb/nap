@@ -64,6 +64,14 @@ class ResourceModel(object):
         self._saved = False
         self.update_fields(kwargs)
 
+    def __eq__(self, other):
+        if hasattr(other, 'to_python'):
+            return self.to_python(for_read=True) == other.to_python(for_read=True)
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def update_fields(self, field_data):
         """Update object's values to values of field_data
 
