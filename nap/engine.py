@@ -464,7 +464,6 @@ class ResourceEngine(object):
 
         request_args.update(request_kwargs)
 
-        print request_args
         return request_args
 
     def modify_request(self, **kwargs):

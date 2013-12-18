@@ -58,7 +58,6 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
         self.engine.model._meta['urls'] = new_urls
 
         final_uri = self.engine.get_create_url()
-        print self.engine.model._meta['urls']
         assert final_uri == "special_create_url/"
 
         self.engine.model._meta['urls'] = old_urls
