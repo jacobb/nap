@@ -110,6 +110,14 @@ class TestReourceEtcMethods(object):
         dm = SampleResourceModel(slug='some-slug')
         assert dm.logger == dm._meta['logger']
 
+    def test_eq(self):
+        dm = SampleResourceModel(slug='some-slug')
+        dm2 = SampleResourceModel(slug='some-slug')
+        dm3 = SampleResourceModel(slug='some-other-slug')
+
+        assert dm == dm2
+        assert dm != dm3
+
 
 class TestResourceAuth(object):
 
