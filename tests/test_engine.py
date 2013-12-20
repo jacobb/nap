@@ -311,6 +311,10 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
 
 def test_modify_request():
     new_headers = {'test-header': '123'}
+    default_args = SampleResourceModel._meta['default_request_args']
+    default_headers = default_args['headers']
+
+    new_headers.update(default_headers)
 
     with mock.patch('requests.request') as post:
         r = mock.Mock()
