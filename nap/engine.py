@@ -451,16 +451,11 @@ class ResourceEngine(object):
         # Defined in Resource's config
         request_args = copy.deepcopy(self.model._meta['default_request_args'])
 
-        # Defined on a per-call level
-        request_args.update(self._tmp_request_args)
-
         if 'headers' in self._tmp_request_args:
             default_headers = request_args.get('headers', {})
             tmp_headers = default_headers.copy()
             tmp_headers.update(self._tmp_request_args['headers'])
             request_args['headers'] = tmp_headers
-
-        # Defined per-call, old style. Deprecated.
 
         request_args.update(request_kwargs)
 

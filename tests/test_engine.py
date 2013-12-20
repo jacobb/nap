@@ -191,35 +191,6 @@ class TestGetResultFromCache(object):
             res = SampleResourceModel.objects._request('GET', 'some-url/')
             assert res == cached_response
 
-# class TestSerialize(object):
-
-#     def test_serialize(self):
-#         dm = SampleResourceModel(
-#             slug='123',
-#             title='test title',
-#             content='test content'
-#         )
-#         json_string = dm.serialize()
-#         obj_dict = json.loads(json_string)
-#         assert obj_dict['title'] == 'test title'
-#         assert obj_dict['content'] == 'test content'
-#         assert obj_dict['alt_name'] == None
-#         assert 'slug' not in obj_dict
-
-#     def test_serialize_for_write_false(self):
-#         dm = SampleResourceModel(
-#             slug='123',
-#             title='test title',
-#             content='test content'
-#         )
-#         json_string = dm.serialize(for_read=True)
-#         obj_dict = json.loads(json_string)
-#         assert obj_dict['title'] == 'test title'
-#         assert obj_dict['content'] == 'test content'
-#         assert obj_dict['alt_name'] == None
-#         assert obj_dict['slug'] == '123'
-
-
 
 class TestResourceEngineWriteMethods(unittest.TestCase):
 
@@ -273,32 +244,6 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
                 data=data, headers=self.headers, auth=None)
         SampleResourceModel._lookup_urls = []
 
-
-    # TODO: FIX THIS BEFORE
-    # def test_handle_create_response(self):
-    #     dm = SampleResourceModel(title='old title')
-    #     with mock.patch('requests.request') as post:
-    #         r = mock.Mock()
-    #         r.content = json.dumps({'title': 'new title', 'content': 'content'})
-    #         r.status_code = 201
-    #         post.return_value = r
-    #         SampleResourceModel.objects.create(dm)
-
-    #     assert dm.title == 'new title'
-    #     assert dm.content == 'content'
-
-    # def test_handle_update_response(self):
-    #     dm = SampleResourceModel(title='old title')
-    #     dm._full_url = 'http://foo.com/v1/random_title/'
-    #     with mock.patch('requests.request') as put:
-    #         r = mock.Mock()
-    #         r.content = json.dumps({'title': 'hello', 'content': 'content'})
-    #         r.status_code = 204
-    #         put.return_value = r
-    #         SampleResourceModel.objects.update(dm)
-    #     assert dm.title == 'hello'
-    #     assert dm.content == 'content'
-
     def test_write_with_no_lookup_url(self):
 
         from pytest import raises
@@ -321,9 +266,9 @@ def test_modify_request():
         r.content = '{}'
         r.status_code = 200
         post.return_value = r
-        SampleResourceModel.objects.modify_request(headers=new_headers).lookup(title=4)
+        SampleResourceModel.objects.modify_request(headers=new_headers).filter()
         post.assert_called_with(
-            'GET', "http://foo.com/v1/4/",
+            'GET', "http://foo.com/v1/note/",
             data=None,
             headers=new_headers,
             auth=None
