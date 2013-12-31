@@ -35,7 +35,7 @@ class ResourceEngine(object):
         skip_cache = kwargs.get('skip_cache', False)
 
         use_cache = request_method in self.model._meta['cached_methods']\
-                    and not skip_cache
+            and not skip_cache
 
         if use_cache:
             self.logger.debug("Trying to get cached response for %s" % url)
@@ -326,7 +326,7 @@ class ResourceEngine(object):
         :param kwargs: keyword arguments passed to get_delete_url
         """
 
-        delete_url  = self.get_delete_url(resource_obj, **kwargs)
+        delete_url = self.get_delete_url(resource_obj, **kwargs)
         response = self._request('DELETE', delete_url)
 
         self.validate_delete_response(response)
