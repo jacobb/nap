@@ -376,7 +376,6 @@ class ResourceEngine(object):
         :param response: a requests.Response object
         """
 
-        self.resource_id = None
         self.handle_response(response)
 
     def serialize(self, obj, for_read=False):

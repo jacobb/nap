@@ -6,9 +6,9 @@ import mock
 
 import nap
 from nap.engine import ResourceEngine
+from nap.exceptions import InvalidStatusError
 
 from . import SampleResourceModel
-
 
 
 class BaseResourceModelTest(object):
@@ -16,6 +16,17 @@ class BaseResourceModelTest(object):
     def get_engine(self):
         engine = ResourceEngine(SampleResourceModel)
         return engine
+
+    def get_mock_response(self, **kwargs):
+
+        default_kwargs = {
+            'status_code': 200,
+            'content': '',
+        }
+        default_kwargs.update(kwargs)
+        r = mock.Mock(**default_kwargs)
+
+        return r
 
 
 class TestResourceModelURLMethods(BaseResourceModelTest):
@@ -34,13 +45,11 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
         assert final_uri_with_params == '1/2/?extra_param=3'
         SampleResourceModel._lookup_urls = []
 
-
     def test_delete_url(self):
 
         self.engine = self.get_engine()
         final_uri = self.engine.get_delete_url(title='1')
         assert final_uri == "1/"
-
 
     def test_update_url(self):
 
@@ -65,7 +74,6 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
 
 class TestResourceEngineAccessMethods(BaseResourceModelTest):
 
-
     def test_get_from_uri(self):
 
         self.engine = self.get_engine()
@@ -89,7 +97,6 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
             assert obj.content == fake_dict['content']
             assert obj._root_url == model_root_url
             assert obj._full_url == expected_url
-
 
     def test_request_no_root_url(self):
         engine = self.get_engine()
@@ -144,8 +151,27 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
         new_slug_url = rm.objects._generate_url(url_type='update', slug='new-slug')
         assert new_slug_url == 'note/new-slug/'
 
+    def test_validate_get_response(self):
+        self.engine = self.get_engine()
+        res = mock.Mock()
+        res.status_code = 500
+        with pytest.raises(InvalidStatusError):
+            self.engine.validate_get_response(res)
 
-class TestResourceCollectionMethods(object):
+    def test_obj_from_response(self):
+
+        engine = self.get_engine()
+        res = mock.Mock()
+        res_dict = {'title': 'a title', 'content': 'some content'}
+        res.content = json.dumps(res_dict)
+
+        obj = engine.obj_from_response(res)
+
+        assert obj.title == res_dict['title']
+        assert obj.content == res_dict['content']
+
+
+class TestResourceCollectionMethods(BaseResourceModelTest):
 
     def test_collection_field(self):
 
@@ -181,6 +207,14 @@ class TestResourceCollectionMethods(object):
 
         assert len(dms) == 2
 
+    def test_validate_collection_response(self):
+        self.engine = self.get_engine()
+        res = mock.Mock()
+        res.status_code = 500
+        with pytest.raises(InvalidStatusError):
+            self.engine.validate_collection_response(res)
+
+
 class TestGetResultFromCache(object):
 
     def test_cached_result(self):
@@ -192,7 +226,7 @@ class TestGetResultFromCache(object):
             assert res == cached_response
 
 
-class TestResourceEngineWriteMethods(unittest.TestCase):
+class TestResourceEngineWriteMethods(BaseResourceModelTest, unittest.TestCase):
 
     headers = {'content-type': 'application/json'}
 
@@ -252,6 +286,113 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
         with raises(ValueError):
             SampleResourceModel.objects.update(dm)
 
+    def test_handle_update_response(self):
+        response = self.get_mock_response()
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            obj = engine.handle_update_response(response)
+            assert not ofr.called
+
+        assert obj is None
+
+    def test_handle_update_response_invalid_content(self):
+        response = self.get_mock_response(content='some invalid content')
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            ofr.side_effect = ValueError("foo")
+            obj = engine.handle_update_response(response)
+            # assert ofr.called
+
+        assert obj is None
+
+    def test_handle_update_response_with_obj(self):
+        response = self.get_mock_response(content='some content')
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            ofr.return_value = SampleResourceModel(title='a title')
+            obj = engine.handle_update_response(response)
+            assert ofr.called
+
+        assert obj.title == 'a title'
+
+    def test_handle_create_response(self):
+        response = self.get_mock_response()
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            obj = engine.handle_create_response(response)
+            assert not ofr.called
+
+        assert obj is None
+
+    def test_handle_create_response_invalid_content(self):
+        response = self.get_mock_response(content='some invalid content')
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            ofr.side_effect = ValueError("foo")
+            obj = engine.handle_create_response(response)
+            # assert ofr.called
+
+        assert obj is None
+
+    def test_handle_create_response_with_obj(self):
+        response = self.get_mock_response(content='some content')
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            ofr.return_value = SampleResourceModel(title='a title')
+            obj = engine.handle_create_response(response)
+            assert ofr.called
+
+        assert obj.title == 'a title'
+
+    def test_validate_update_response(self):
+        engine = self.get_engine()
+        res = mock.Mock()
+        res.status_code = 500
+        with pytest.raises(InvalidStatusError):
+            engine.validate_update_response(res)
+
+    def test_validate_create_response(self):
+        engine = self.get_engine()
+        res = mock.Mock()
+        res.status_code = 500
+        with pytest.raises(InvalidStatusError):
+            engine.validate_create_response(res)
+
+    @mock.patch('nap.engine.ResourceEngine.validate_delete_response')
+    @mock.patch('nap.engine.ResourceEngine.handle_delete_response')
+    @mock.patch('nap.engine.ResourceEngine._request')
+    def test_delete(self, *mocks):
+        engine = self.get_engine()
+        obj = SampleResourceModel(title='a title')
+        engine.delete(obj)
+        assert mocks[0].called
+        assert mocks[1].called
+
+    def test_validate_delete_response(self):
+
+        engine = self.get_engine()
+        res = mock.Mock()
+        res.status_code = 500
+        with mock.patch('nap.engine.ResourceEngine.validate_response') as vr:
+            with pytest.raises(InvalidStatusError):
+                engine.validate_delete_response(res)
+            assert vr.called
+
+    def test_handle_delete_response(self):
+        response = self.get_mock_response()
+        engine = self.get_engine()
+
+        with mock.patch('nap.engine.ResourceEngine.obj_from_response') as ofr:
+            obj = engine.handle_delete_response(response)
+            assert not ofr.called
+
+        assert obj is None
 
 
 def test_modify_request():

@@ -101,7 +101,6 @@ class ResourceModel(object):
             for key in extra_data
         ])
 
-
     def update(self, **kwargs):
         """
         Shortcut function to force an update on an object
@@ -111,6 +110,7 @@ class ResourceModel(object):
 
     def delete(self, **kwargs):
         self.objects.delete(self, **kwargs)
+        self.resource_id = None
 
     def save(self, **kwargs):
         """Contextually save current object. If an object can generate an
