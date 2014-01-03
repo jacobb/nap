@@ -1,6 +1,3 @@
-import json
-import unittest
-
 import nap
 
 import mock
@@ -63,6 +60,7 @@ class TestResourceSave(object):
             dm.save()
             assert update.called
 
+
 class TestResourceID(object):
 
     def test_resource_id_get(self):
@@ -80,7 +78,7 @@ class TestResourceID(object):
 
         assert dm.resource_id is None
 
-    def test_no_resource_id_get(self):
+    def test_no_resource_id_set(self):
         dm = SampleResourceNoIdModel(
             slug='some-slug',
         )
@@ -117,6 +115,7 @@ class TestReourceEtcMethods(object):
 
         assert dm == dm2
         assert dm != dm3
+        assert dm != object()
 
 
 class TestResourceAuth(object):
@@ -124,3 +123,40 @@ class TestResourceAuth(object):
     def test_meta_set(self):
         # SampleResourceModel
         pass
+
+
+class TestResourceShortcutMethods(object):
+
+    def get_resource_obj(self, **kwargs):
+        defaults = {
+            'slug': 'some-slug',
+        }
+        defaults.update(kwargs)
+
+        dm = SampleResourceModel(**defaults)
+
+        return dm
+
+    @mock.patch('nap.resources.ResourceModel.update_fields')
+    @mock.patch('nap.engine.ResourceEngine.update')
+    def test_update(self, *mocks):
+        eng_up = mocks[0]
+        uf = mocks[1]
+
+        obj = self.get_resource_obj()
+        new_data = {'slug': 'new-slug'}
+
+        eng_up.return_value = mock.Mock(_raw_field_data=new_data)
+        obj.update()
+
+        uf.assert_called_with(new_data)
+        eng_up.assert_called_with(obj)
+
+    @mock.patch('nap.engine.ResourceEngine.delete')
+    def test_delete(self, *mocks):
+        eng_del = mocks[0]
+        obj = self.get_resource_obj()
+
+        obj.delete()
+        eng_del.assert_called_with(obj)
+        assert obj.resource_id is None

@@ -1,6 +1,6 @@
 import pytest
 
-from nap.http import NapRequest
+from nap.http import NapRequest, NapResponse
 
 
 class TestRequestMethods(object):
@@ -14,3 +14,11 @@ class TestRequestMethods(object):
 
         with pytest.raises(ValueError):
             r.method = invalid_method
+
+
+class TestNapResponse(object):
+
+    def test_default_headers(self):
+        res = NapResponse('content', 'naprulez.org', 200)
+
+        assert hasattr(res.headers, 'keys')

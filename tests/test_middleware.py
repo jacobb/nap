@@ -5,13 +5,16 @@ import mock
 from . import SampleResourceModel
 from nap.middleware import BaseMiddleware
 
+
 class TestMiddleware(BaseMiddleware):
 
     def handle_request(self, request):
+        request = super(TestMiddleware, self).handle_request(request)
         request.headers.update({'fake_header': 'fake_value'})
         return request
 
     def handle_response(self, request, response):
+        response = super(TestMiddleware, self).handle_response(request, response)
         response.headers.update({'fake_header': 'fake_response_value'})
         return response
 

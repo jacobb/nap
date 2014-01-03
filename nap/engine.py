@@ -244,8 +244,11 @@ class ResourceEngine(object):
             obj_list = r_data
             extra_data = {}
 
-        if not hasattr(obj_list, '__iter__'):
-            raise ValueError('expected array-type response')
+        if obj_list:
+            try:
+                getattr(obj_list[0], 'keys')
+            except (KeyError, AttributeError):
+                raise ValueError('expected list of dictionaries')
 
         resource_list = [self.model(**obj_dict) for obj_dict in obj_list]
         return ListWithAttributes(resource_list, extra_data)
@@ -376,7 +379,6 @@ class ResourceEngine(object):
         :param response: a requests.Response object
         """
 
-        self.resource_id = None
         self.handle_response(response)
 
     def serialize(self, obj, for_read=False):
