@@ -33,11 +33,15 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
 
     def test_get_lookup_url(self):
 
-        self.engine = self.get_engine()
-        final_uri = self.engine.get_lookup_url(hello='1', what='2')
+        engine = self.get_engine()
+
+        with pytest.raises(ValueError):
+            engine.get_lookup_url(content='something')
+
+        final_uri = engine.get_lookup_url(hello='1', what='2')
         assert final_uri == "1/2/"
 
-        final_uri_with_params = self.engine.get_lookup_url(
+        final_uri_with_params = engine.get_lookup_url(
             hello='1',
             what='2',
             extra_param='3'
@@ -47,36 +51,36 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
 
     def test_delete_url(self):
 
-        self.engine = self.get_engine()
-        final_uri = self.engine.get_delete_url(title='1')
+        engine = self.get_engine()
+        final_uri = engine.get_delete_url(title='1')
         assert final_uri == "1/"
 
     def test_update_url(self):
 
-        self.engine = self.get_engine()
-        final_uri = self.engine.get_delete_url(title='1')
+        engine = self.get_engine()
+        final_uri = engine.get_delete_url(title='1')
         assert final_uri == "1/"
 
     def test_create_url(self):
 
-        self.engine = self.get_engine()
+        engine = self.get_engine()
 
         prepend_urls = (nap.lookup.nap_url(r'special_create_url/', create=True, lookup=False),)
-        old_urls = self.engine.model._meta['urls']
+        old_urls = engine.model._meta['urls']
         new_urls = prepend_urls + old_urls
-        self.engine.model._meta['urls'] = new_urls
+        engine.model._meta['urls'] = new_urls
 
-        final_uri = self.engine.get_create_url()
+        final_uri = engine.get_create_url()
         assert final_uri == "special_create_url/"
 
-        self.engine.model._meta['urls'] = old_urls
+        engine.model._meta['urls'] = old_urls
 
 
 class TestResourceEngineAccessMethods(BaseResourceModelTest):
 
     def test_get_from_uri(self):
 
-        self.engine = self.get_engine()
+        engine = self.get_engine()
         fake_dict = {
             'title': "A fake title",
             'content': "isnt this neat",
@@ -85,13 +89,13 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
             stubbed_response = mock.Mock()
             stubbed_response.content = json.dumps(fake_dict)
 
-            model_root_url = self.engine.model._meta['root_url']
+            model_root_url = engine.model._meta['root_url']
             expected_url = "xyz/"
             stubbed_response.url = expected_url
             stubbed_response.status_code = 200
 
             get.return_value = stubbed_response
-            obj = self.engine.get_from_uri('xyz')
+            obj = engine.get_from_uri('xyz')
 
             assert obj.title == fake_dict['title']
             assert obj.content == fake_dict['content']
@@ -110,37 +114,37 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
 
     def test_get(self):
 
-        self.engine = self.get_engine()
+        engine = self.get_engine()
         with mock.patch('nap.engine.ResourceEngine.get_from_uri') as g:
-            self.engine.get('/some/uri/')
+            engine.get('/some/uri/')
             g.assert_called_once
         with mock.patch('nap.engine.ResourceEngine.lookup') as lookup:
-            self.engine.get(pk=1)
+            engine.get(pk=1)
             lookup.assert_called_once
 
     def test_lookup(self):
 
-        self.engine = self.get_engine()
+        engine = self.get_engine()
         with mock.patch('nap.engine.ResourceEngine.get_from_uri') as get:
-            self.engine.lookup(hello='hello_test', what='what_test')
+            engine.lookup(hello='hello_test', what='what_test')
             get.assert_called_with('hello_test/what_test/')
 
         SampleResourceModel._lookup_urls = []
 
     def test_lookup_no_valid_urls(self):
 
-        self.engine = self.get_engine()
+        engine = self.get_engine()
         from pytest import raises
         with raises(ValueError):
-            self.engine.get_lookup_url(hello='bad_hello')
+            engine.get_lookup_url(hello='bad_hello')
 
         SampleResourceModel._lookup_urls = []
 
     def test_generate_url(self):
 
-        self.engine = self.get_engine()
-        rm = self.engine.model(hello='1', slug='slug')
-        assert self.engine._generate_url(url_type='create', resource_obj=rm) == 'note/'
+        engine = self.get_engine()
+        rm = engine.model(hello='1', slug='slug')
+        assert engine._generate_url(url_type='create', resource_obj=rm) == 'note/'
 
         # assert that keyword arguments take precedence over meta arguments
         essay_url = rm.objects._generate_url(url_type='create', resource_name='essay')
@@ -152,11 +156,11 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
         assert new_slug_url == 'note/new-slug/'
 
     def test_validate_get_response(self):
-        self.engine = self.get_engine()
+        engine = self.get_engine()
         res = mock.Mock()
         res.status_code = 500
         with pytest.raises(InvalidStatusError):
-            self.engine.validate_get_response(res)
+            engine.validate_get_response(res)
 
     def test_obj_from_response(self):
 
@@ -204,15 +208,19 @@ class TestResourceCollectionMethods(BaseResourceModelTest):
             ])
             request.return_value = r
             dms = SampleResourceModel.objects.filter(title='title')
+            assert len(dms) == 2
 
-        assert len(dms) == 2
+            r.content = json.dumps({'something': 'wrong'})
+            request.return_value = r
+            with pytest.raises(ValueError):
+                SampleResourceModel.objects.filter(title='title')
 
     def test_validate_collection_response(self):
-        self.engine = self.get_engine()
+        engine = self.get_engine()
         res = mock.Mock()
         res.status_code = 500
         with pytest.raises(InvalidStatusError):
-            self.engine.validate_collection_response(res)
+            engine.validate_collection_response(res)
 
 
 class TestGetResultFromCache(object):

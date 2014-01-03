@@ -35,3 +35,9 @@ class TestLookupURL(object):
         assert len(extra_data) == 2
         assert 'one' in extra_data
         assert 'two' in extra_data
+
+    def test_repr(self):
+        lookup_url = LookupURL(self.url_string, ('extra',))
+
+        assert lookup_url.__unicode__() == self.url_string
+        assert lookup_url.__unicode__() in str(lookup_url)

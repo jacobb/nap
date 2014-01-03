@@ -18,33 +18,42 @@ class TestFields(object):
     def test_readonly(self):
 
         field = Field()
-        assert field.readonly == False
+        assert field.readonly is False
 
         readonly_field = Field(readonly=True)
-        assert readonly_field.readonly == True
+        assert readonly_field.readonly is True
 
         pk_field = Field(resource_id=True)
-        assert pk_field.readonly == True
+        assert pk_field.readonly is True
 
         pk_readonly_field = Field(resource_id=True, readonly=False)
-        assert pk_readonly_field.readonly == False
+        assert pk_readonly_field.readonly is False
 
     def test_resource_field(self):
+
         field = ResourceField(AuthorModel)
+
+        assert field.scrub_value('') is None
+        assert field.descrub_value('') is None
+
         author_dict = {
             'name': 'Jacob',
             'email': 'elitist@gmail.com',
         }
-        resource = field.scrub_value(author_dict)
 
+        resource = field.scrub_value(author_dict)
         assert resource.name == 'Jacob'
         assert resource.email == 'elitist@gmail.com'
+
         new_author_dict = field.descrub_value(resource)
 
         assert new_author_dict == author_dict
 
+        assert field.coerce(resource) == resource
+
     def test_list_field(self):
         field = ListField(AuthorModel)
+
         author_dict_list = [
             {
                 'name': 'Jacob',
@@ -67,7 +76,7 @@ class TestFields(object):
         assert resource_list[2].name == 'Jane'
 
         assert resource_list[0].email == 'elitist@gmail.com'
-        assert resource_list[1].email == None
+        assert resource_list[1].email is None
         assert resource_list[2].email == 'jane@doe.com'
 
         new_author_dict_list = field.descrub_value(resource_list)
@@ -76,13 +85,17 @@ class TestFields(object):
 
     def test_empty_list_field(self):
         field = ListField(AuthorModel)
-        assert field.scrub_value([]) == []
-        assert field.scrub_value(None) == []
+        for val in ('', None, {}):
+            for result in (field.scrub_value(val), field.descrub_value(val)):
+                assert hasattr(result, '__iter__')
+                assert len(result) == 0
 
     def test_empty_dict_field(self):
         field = DictField(AuthorModel)
-        assert field.scrub_value({}) == {}
-        assert field.scrub_value(None) == {}
+        for val in ('', None, {}):
+            for result in (field.scrub_value(val), field.descrub_value(val)):
+                assert hasattr(result, 'keys')
+                assert len(result) == 0
 
     def test_dict_field(self):
         field = DictField(AuthorModel)
@@ -125,8 +138,8 @@ class TestFields(object):
     def test_empty_datetime_field(self):
 
         field = DateTimeField()
-        assert field.scrub_value(None) == None
-        assert field.descrub_value(None) == None
+        assert field.scrub_value(None) is None
+        assert field.descrub_value(None) is None
 
     def test_datetime_field_new_dt_format(self):
 

@@ -1,3 +1,5 @@
+
+
 class BaseMiddleware(object):
 
     def handle_request(self, request):

@@ -95,3 +95,24 @@ class TestDjangoCacheBackend(TestBaseCacheBackend):
         }
         defaults.update(kwargs)
         return django_cache.DjangoCacheBackend(**defaults)
+
+    @mock.patch('django.core.cache.cache.get')
+    def test_get(self, *mocks):
+        dj_cache_get = mocks[0]
+        dj_cache_get.return_value = 'a thing'
+        res = mock.Mock()
+        res.url = 'naprulez.org'
+        backend = self.get_backend()
+        backend.get(res)
+        assert dj_cache_get.called
+
+    @mock.patch('django.core.cache.cache.set')
+    def test_set(self, *mocks):
+        dj_cache_set = mocks[0]
+
+        res = mock.Mock()
+        res.url = 'naprulez.org'
+        res.headers = {}
+        backend = self.get_backend()
+        backend.set(res)
+        assert dj_cache_set.called
