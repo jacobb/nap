@@ -378,7 +378,7 @@ class TestResourceEngineWriteMethods(BaseResourceModelTest, unittest.TestCase):
     def test_delete(self, *mocks):
 
         handle_delete = mocks[1]
-        validate_delete = mocks[1]
+        validate_delete = mocks[2]
         engine = self.get_engine()
         obj = SampleResourceModel(title='a title')
         engine.delete(obj)
