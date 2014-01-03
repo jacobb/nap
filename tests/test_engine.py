@@ -376,11 +376,14 @@ class TestResourceEngineWriteMethods(BaseResourceModelTest, unittest.TestCase):
     @mock.patch('nap.engine.ResourceEngine.handle_delete_response')
     @mock.patch('nap.engine.ResourceEngine._request')
     def test_delete(self, *mocks):
+
+        handle_delete = mocks[1]
+        validate_delete = mocks[1]
         engine = self.get_engine()
         obj = SampleResourceModel(title='a title')
         engine.delete(obj)
-        assert mocks[0].called
-        assert mocks[1].called
+        assert handle_delete.called
+        assert validate_delete.called
 
     def test_validate_delete_response(self):
 
