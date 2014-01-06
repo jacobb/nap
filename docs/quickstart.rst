@@ -36,19 +36,19 @@ Step Two: Access your api
     # POST http://127.0.0.1:8000/api/note/
     n.save()
 
-    n = Note.get('note/1/')
+    n = Note.objects.get('note/1/')
     # Some Title
     n.title
 
     # GET http://127.0.0.1:8000/api/note/1/
-    n = Note.lookup(pk=1)
+    n = Note.objects.lookup(pk=1)
     n.title = "New Title"
     n.content = "I sure do love butterflies"
 
     # PUT http://127.0.0.1:8000/api/note/1/
     n.save()
 
-    n = Note.get('note/1/')
+    n = Note.objects.get('note/1/')
     # "New Title"
     n.title
 
@@ -75,7 +75,7 @@ Step Three: Set up custom lookup_urls
             )
 
     # GET http://127.0.0.1:8000/api/note/title/butterflies/
-    n = Note.lookup(title='New Title')
+    n = Note.objects.lookup(title='New Title')
     # "I sure do love butterflies"
     n.content
 
@@ -83,5 +83,7 @@ Step Four: What's next?
 =======================
 
 * Learn more about tweaking :class:`~nap.resources.ResourceModel` by looking at :doc:`tutorial/tutorial1`
-* :doc:`Learn about LookupURLs<urls>`--the main engine behind nap.
-* Look deep into the :doc:`resourcemodel`
+* :doc:`Learn about LookupURLs<urls>`, the glue between your resource and its API
+* Look deeper into the core modules behind nap:
+    *  :doc:`resourcemodel`, The Pythonic representation of your resource.
+    *  :doc:`engine`, all the HTTP nuts-and-bolts powering nap.
