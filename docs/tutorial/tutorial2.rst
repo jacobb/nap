@@ -214,7 +214,7 @@ Final Gist Model
             update_method = 'PATCH'
             prepend_urls = (
                 # For accessing /gists/starred and /gists/public, eg.
-                # Gist.filter(property='starred')
+                # Gist.objects.filter(property='starred')
                 nap_url('%(resource_name)s/%(property)s', collection=True, lookup=False),
             )
             auth = (
