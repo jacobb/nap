@@ -5,6 +5,7 @@ import pytest
 import mock
 
 import nap
+from nap.http import NapResponse
 from nap.engine import ResourceEngine
 
 from . import SampleResourceModel
@@ -181,15 +182,39 @@ class TestResourceCollectionMethods(object):
 
         assert len(dms) == 2
 
+
 class TestGetResultFromCache(object):
 
     def test_cached_result(self):
 
-        cached_response = 'hello!'
+        res_content = 'hello!'
+        cached_response = NapResponse(
+            content=res_content,
+            url='some-url/',
+            status_code=200,
+        )
         with mock.patch('nap.cache.base.BaseCacheBackend.get') as get:
             get.return_value = cached_response
             res = SampleResourceModel.objects._request('GET', 'some-url/')
             assert res == cached_response
+
+    @mock.patch('nap.cache.base.BaseCacheBackend.get')
+    @mock.patch('nap.cache.base.BaseCacheBackend.set')
+    def test_cache_set_not_called_on_cached_reselt(self, *mocks):
+
+        get = mocks[1]
+        cache_set = mocks[0]
+
+        res_content = json.dumps({'title': 'hello!'})
+        cached_response = NapResponse(
+            content=res_content,
+            url='some-url/',
+            status_code=200,
+            use_cache=True,
+        )
+        get.return_value = cached_response
+        SampleResourceModel.objects.get_from_uri('some-url/')
+        assert not cache_set.called
 
 
 class TestResourceEngineWriteMethods(unittest.TestCase):
@@ -251,7 +276,6 @@ class TestResourceEngineWriteMethods(unittest.TestCase):
         dm = SampleResourceModel(content='what')
         with raises(ValueError):
             SampleResourceModel.objects.update(dm)
-
 
 
 def test_modify_request():

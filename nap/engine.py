@@ -35,13 +35,17 @@ class ResourceEngine(object):
         skip_cache = kwargs.get('skip_cache', False)
 
         use_cache = request_method in self.model._meta['cached_methods']\
-                    and not skip_cache
-
+            and not skip_cache
         if use_cache:
             self.logger.debug("Trying to get cached response for %s" % url)
             cached_response = self.cache.get(request)
             if cached_response:
                 self.logger.debug("Got cached response for %s" % url)
+
+                # Cached responses should not get re-cached to allow for
+                # expected timeouts. Now that we've retrieved the cached
+                # response, behave as if cache is turned off.
+                cached_response.use_cache = False
                 return cached_response
 
         resource_response = request.send()
