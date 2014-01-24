@@ -42,6 +42,11 @@ class ResourceEngine(object):
             cached_response = self.cache.get(request)
             if cached_response:
                 self.logger.debug("Got cached response for %s" % url)
+
+                # Cached responses should not get re-cached to allow for
+                # expected timeouts. Now that we've retrieved the cached
+                # response, behave as if cache is turned off.
+                cached_response.use_cache = False
                 return cached_response
 
         resource_response = request.send()

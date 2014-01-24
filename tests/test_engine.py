@@ -5,6 +5,7 @@ import pytest
 import mock
 
 import nap
+from nap.http import NapResponse
 from nap.engine import ResourceEngine
 from nap.exceptions import InvalidStatusError
 
@@ -223,15 +224,39 @@ class TestResourceCollectionMethods(BaseResourceModelTest):
             engine.validate_collection_response(res)
 
 
+
 class TestGetResultFromCache(object):
 
     def test_cached_result(self):
 
-        cached_response = 'hello!'
+        res_content = 'hello!'
+        cached_response = NapResponse(
+            content=res_content,
+            url='some-url/',
+            status_code=200,
+        )
         with mock.patch('nap.cache.base.BaseCacheBackend.get') as get:
             get.return_value = cached_response
             res = SampleResourceModel.objects._request('GET', 'some-url/')
             assert res == cached_response
+
+    @mock.patch('nap.cache.base.BaseCacheBackend.get')
+    @mock.patch('nap.cache.base.BaseCacheBackend.set')
+    def test_cache_set_not_called_on_cached_reselt(self, *mocks):
+
+        get = mocks[1]
+        cache_set = mocks[0]
+
+        res_content = json.dumps({'title': 'hello!'})
+        cached_response = NapResponse(
+            content=res_content,
+            url='some-url/',
+            status_code=200,
+            use_cache=True,
+        )
+        get.return_value = cached_response
+        SampleResourceModel.objects.get_from_uri('some-url/')
+        assert not cache_set.called
 
 
 class TestResourceEngineWriteMethods(BaseResourceModelTest, unittest.TestCase):
@@ -404,7 +429,6 @@ class TestResourceEngineWriteMethods(BaseResourceModelTest, unittest.TestCase):
             assert not ofr.called
 
         assert obj is None
-
 
 def test_modify_request():
     new_headers = {'test-header': '123'}
