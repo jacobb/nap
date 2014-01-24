@@ -56,7 +56,6 @@ class NapConfig(dict):
 
         return default_request_args
 
-
     def __init__(self, conf=None, **kwargs):
         if not conf:
             conf = {}

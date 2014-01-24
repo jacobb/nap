@@ -44,14 +44,14 @@ Immediately we see one difference from our Tastypie example. While we could have
 
 Let's try using this by grabbing a `example gist`_::
 
-    >>> g = Gist.get(id='3256061')
+    >>> g = Gist.objects.get(id='3256061')
     Traceback (most recent call last):
     # ...
     ValueError: Expected status code in (200,), got 404
 
 .. _example gist: https://gist.github.com/3256061
 
-Well that's not good! Diving into the gist API docs, we see that Github's API URLs do *not* include a trailing slash, as our default URLs do. This is a fairly common API spec, and we can accommodate this by setting the Meta option :ref:`add_slash` to False.
+Well, that's not good! Diving into the gist API docs, we see that Github's API URLs do *not* include a trailing slash, as our default URLs do. This is a fairly common API spec, and we can accommodate this by setting the Meta option :ref:`add_slash` to False.
 
 .. code-block:: python
     :emphasize-lines: 14
@@ -72,7 +72,7 @@ Well that's not good! Diving into the gist API docs, we see that Github's API UR
 
 Let's give that a try::
 
-    >>> g = Gist.get(id='3256061')
+    >>> g = Gist.objects.get(id='3256061')
     >>> print g.description  # "Nap Example"
 
 That's better!
@@ -167,7 +167,7 @@ Both of these cases are handled by Meta options. Let's add them.
 
 Now let's fetch our Gist using a get, and try editing it again::
 
-    >>> g = Gist.get(id='USE_YOUR_GIST_ID_HERE')
+    >>> g = Gist.objects.get(id='USE_YOUR_GIST_ID_HERE')
     >>> g.description = 'new description'
     >>> g.save()
 
@@ -214,7 +214,7 @@ Final Gist Model
             update_method = 'PATCH'
             prepend_urls = (
                 # For accessing /gists/starred and /gists/public, eg.
-                # Gist.filter(property='starred')
+                # Gist.objects.filter(property='starred')
                 nap_url('%(resource_name)s/%(property)s', collection=True, lookup=False),
             )
             auth = (

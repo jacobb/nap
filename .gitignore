@@ -10,4 +10,5 @@ secret.py
 build
 dist
 *egg-info
+.DS_Store
 
