@@ -246,7 +246,7 @@ class ResourceEngine(object):
 
         if obj_list:
             try:
-                getattr(obj_list[0], 'keys')
+                obj_list[0].keys
             except (KeyError, AttributeError):
                 raise ValueError('expected list of dictionaries')
 
