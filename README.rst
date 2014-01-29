@@ -35,14 +35,14 @@ nap hopes to help.
     n.title
 
     # GET http://127.0.0.1:8000/api/note/1/
-    n = Note.lookup(pk=1)
+    n = Note.objects.lookup(pk=1)
     n.title = "New Title"
     n.content = "I sure do love naps!"
 
     # PUT http://127.0.0.1:8000/api/note/1/
     n.save()
 
-    n = Note.get('note/1/')
+    n = Note.objects.get('note/1/')
     # "New Title"
     n.title
 
