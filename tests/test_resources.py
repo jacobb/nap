@@ -57,6 +57,7 @@ class TestResourceSave(object):
             assert create.called
         dm._full_url = 'http://www.foo.com/v1/1/'
         with mock.patch('nap.engine.ResourceEngine.update') as update:
+            update.return_value = None
             dm.save()
             assert update.called
 

@@ -106,7 +106,8 @@ class ResourceModel(object):
         Shortcut function to force an update on an object
         """
         obj = self.objects.update(self, **kwargs)
-        self.update_fields(obj._raw_field_data)
+        if obj:
+            self.update_fields(obj._raw_field_data)
 
     def delete(self, **kwargs):
         self.objects.delete(self, **kwargs)
@@ -124,7 +125,8 @@ class ResourceModel(object):
         else:
             obj = self.objects.modify_request(**request_kwargs).create(self, **kwargs)
 
-        self.update_fields(obj._raw_field_data)
+        if obj:
+            self.update_fields(obj._raw_field_data)
 
     # utility methods
     def to_python(self, for_read=False):
