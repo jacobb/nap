@@ -1,4 +1,5 @@
 from .conf import NapConfig
+from .exceptions import EmptyResponseError
 from .fields import Field
 from .lookup import default_lookup_urls
 
@@ -106,7 +107,10 @@ class ResourceModel(object):
         Shortcut function to force an update on an object
         """
         obj = self.objects.update(self, **kwargs)
-        if obj:
+        if self._meta['update_from_write']:
+            if not obj:
+                raise EmptyResponseError("Cannot update fields: "
+                    "update_from_write is True but no object was returned")
             self.update_fields(obj._raw_field_data)
 
     def delete(self, **kwargs):
@@ -125,7 +129,10 @@ class ResourceModel(object):
         else:
             obj = self.objects.modify_request(**request_kwargs).create(self, **kwargs)
 
-        if obj:
+        if self._meta['update_from_write']:
+            if not obj:
+                raise EmptyResponseError("Cannot update fields: "
+                    "update_from_write is True but no object was returned")
             self.update_fields(obj._raw_field_data)
 
     # utility methods
