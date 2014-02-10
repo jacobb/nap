@@ -54,20 +54,58 @@ class DateTimeField(Field):
 
         for format in self.dt_formats:
             try:
-                scrubed_val = datetime.datetime.strptime(val, format)
+                scrubbed_val = datetime.datetime.strptime(val, format)
             except ValueError:
                 continue
             else:
                 break
         else:
             raise ValueError("%s is not a valid time format" % val)
-        return scrubed_val
+        return scrubbed_val
 
     def descrub_value(self, val, for_read=False):
         if not val:
             return None
         dt_format = self.dt_formats[0]
         return datetime.datetime.strftime(val, dt_format)
+
+
+class DateField(Field):
+
+    def __init__(self, *args, **kwargs):
+        iso_8601 = "%Y-%m-%d"
+        try:
+            dt_formats = kwargs.pop('dt_format')
+        except KeyError:
+            dt_formats = kwargs.pop('dt_formats', (iso_8601,))
+
+        if is_string_like(dt_formats):
+            dt_formats = (dt_formats,)
+
+        self.dt_formats = dt_formats
+        super(DateField, self).__init__(*args, **kwargs)
+
+    def scrub_value(self, val):
+
+        if not val:
+            return None
+
+        for format in self.dt_formats:
+            try:
+                scrubbed_val = datetime.datetime.strptime(val, format).date()
+            except ValueError:
+                continue
+            else:
+                break
+        else:
+            raise ValueError("%s is not a valid date format" % val)
+        return scrubbed_val
+
+    def descrub_value(self, val, for_read=False):
+        if not val:
+            return None
+        dt_format = self.dt_formats[0]
+        return datetime.date.strftime(val, dt_format)
 
 
 class ResourceField(Field):

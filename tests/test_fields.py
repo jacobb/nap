@@ -3,7 +3,7 @@ import pytest
 
 from . import AuthorModel
 from nap.fields import (Field, ResourceField, ListField,
-        DictField, DateTimeField)
+        DictField, DateTimeField, DateField)
 
 
 class TestFields(object):
@@ -168,3 +168,39 @@ class TestFields(object):
         micro_dt_str = '2010-06-02 16:30:06.24234234'
         assert field.scrub_value(micro_dt_str) == expected_dt
         assert field.descrub_value(expected_dt) == dt_str
+
+    def test_date_field(self):
+
+        field = DateField()
+
+        dt_str = '2012-08-21'
+        expected_dt = datetime.date(year=2012, month=8, day=21)
+        assert field.scrub_value(dt_str) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+    def test_empty_date_field(self):
+
+        field = DateField()
+        assert field.scrub_value(None) is None
+        assert field.descrub_value(None) is None
+
+    def test_date_field_new_dt_format(self):
+
+        american_format = "%m/%d/%Y"
+        field = DateField(dt_format=american_format)
+
+        dt_str = '08/21/2012'
+        expected_dt = datetime.date(year=2012, month=8, day=21)
+        assert field.scrub_value(dt_str) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+        field = DateField(dt_formats=(american_format, "%Y-%m-%d"))
+        dt_str2 = '08/21/2012'
+        bad_string = "2010~06~02"
+        expected_dt = datetime.date(year=2012, month=8, day=21)
+        assert field.scrub_value(dt_str) == expected_dt
+        assert field.scrub_value(dt_str2) == expected_dt
+        assert field.descrub_value(expected_dt) == dt_str
+
+        with pytest.raises(ValueError):
+            field.scrub_value(bad_string)
