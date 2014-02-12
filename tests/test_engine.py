@@ -450,4 +450,18 @@ def test_modify_request():
             auth=None
         )
 
+    # ensure a subsequent, non-modified request is actually not modified
+    with mock.patch('requests.request') as post2:
+        r = mock.Mock()
+        r.content = '{}'
+        r.status_code = 200
+        post2.return_value = r
+        SampleResourceModel.objects.filter()
+        post2.assert_called_with(
+            'GET', "http://foo.com/v1/note/",
+            data=None,
+            headers=default_args['headers'],
+            auth=None
+        )
+
     SampleResourceModel._lookup_urls = []

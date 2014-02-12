@@ -469,8 +469,11 @@ class ResourceEngine(object):
         return request_args
 
     def modify_request(self, **kwargs):
-        self._tmp_request_args.update(kwargs)
-        return self
+        new_eng = self.__class__(self.model)
+        new_eng._tmp_request_args.update(self._tmp_request_args)
+        new_eng._tmp_request_args.update(kwargs)
+
+        return new_eng
 
     @property
     def cache(self):
