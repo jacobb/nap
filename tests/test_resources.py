@@ -1,8 +1,11 @@
 import nap
+from nap.exceptions import EmptyResponseError
 
 import mock
+import pytest
 
-from . import SampleResourceModel, SampleResourceNoIdModel
+from . import (SampleResourceModel, SampleResourceNoIdModel,
+    SampleResourceNoUpdateModel)
 
 
 class TestResourceModelCreation(object):
@@ -57,6 +60,24 @@ class TestResourceSave(object):
             assert create.called
         dm._full_url = 'http://www.foo.com/v1/1/'
         with mock.patch('nap.engine.ResourceEngine.update') as update:
+            dm.save()
+            assert update.called
+        with mock.patch('nap.engine.ResourceEngine.update') as update:
+            update.return_value = None
+            with pytest.raises(EmptyResponseError):
+                dm.save()
+
+    def test_save_no_update_from_write(self):
+        dm = SampleResourceNoUpdateModel(
+            title=None,
+            content='Blank Content')
+        with mock.patch('nap.engine.ResourceEngine.create') as create:
+            create.return_value = None
+            dm.save()
+            assert create.called
+        dm._full_url = 'http://www.foo.com/v1/1/'
+        with mock.patch('nap.engine.ResourceEngine.update') as update:
+            update.return_value = None
             dm.save()
             assert update.called
 
@@ -145,7 +166,6 @@ class TestResourceShortcutMethods(object):
 
         obj = self.get_resource_obj()
         new_data = {'slug': 'new-slug'}
-
         eng_up.return_value = mock.Mock(_raw_field_data=new_data)
         obj.update()
 

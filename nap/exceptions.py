@@ -11,5 +11,9 @@ class InvalidStatusError(ValueError):
         super(InvalidStatusError, self).__init__(msg)
 
 
+class EmptyResponseError(Exception):
+    pass
+
+
 class DoesNotExist(Exception):
     pass
