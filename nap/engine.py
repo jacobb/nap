@@ -31,31 +31,14 @@ class ResourceEngine(object):
         for mw in self.model._meta['middleware']:
             request = mw.handle_request(request)
 
-        # Handle cacheing, unless skipped
-        skip_cache = kwargs.get('skip_cache', False)
-
-        use_cache = request_method in self.model._meta['cached_methods']\
-            and not skip_cache
-
-        if use_cache:
-            self.logger.debug("Trying to get cached response for %s" % url)
-            cached_response = self.cache.get(request)
-            if cached_response:
-                self.logger.debug("Got cached response for %s" % url)
-
-                # Cached responses should not get re-cached to allow for
-                # expected timeouts. Now that we've retrieved the cached
-                # response, behave as if cache is turned off.
-                cached_response.use_cache = False
-                return cached_response
-
         resource_response = request.send()
         response = NapResponse(
             url=request.url,
             status_code=resource_response.status_code,
             headers=resource_response.headers,
             content=resource_response.content,
-            use_cache=use_cache,
+            request_method=request_method,
+
 
         )
 
@@ -106,20 +89,24 @@ class ResourceEngine(object):
             base_url, params = url.match(**url_match_vars)
 
             if base_url:
-                full_url = make_url(base_url,
+                full_url = make_url(
+                    base_url,
                     params=params,
-                    add_slash=self.model._meta['add_slash'])
+                    add_slash=self.model._meta['add_slash']
+                )
 
                 return full_url
 
         raise ValueError("No valid url")
 
-    def get_lookup_url(self, **kwargs):
+    def get_lookup_url(self, resource_obj=None, **kwargs):
         """Generate a URL suitable for get requests based on ``kwargs``
+        Alternatively, look up a canonical GET uri for given `resource_obj`
 
         :param kwargs: URL lookup variables
+        :param resource_obj: Resource to determine a canonical GET uri
         """
-        return self._generate_url(**kwargs)
+        return self._generate_url(resource_obj=resource_obj, **kwargs)
 
         raise ValueError("no valid URL for lookup found")
 
@@ -177,18 +164,20 @@ class ResourceEngine(object):
 
         :param lookup_vars: variables to send to get_lookup_url
         """
+
         uri = self.get_lookup_url(**lookup_vars)
         return self.get_from_uri(uri)
-
-    # def refresh(self, *args, **kwargs):
-    #     url = self.full_url or self._generate_url(url_type='lookup')
-    #     self.get_from_uri(url, *args, **kwargs)
 
     def get_from_uri(self, url, *args, **kwargs):
         """instance method to perform all non-collection get requests
         """
-        url = handle_slash(url, self.model._meta['add_slash'])
-        response = self._request('GET', url, *args, **kwargs)
+        cleaned_url = handle_slash(url, self.model._meta['add_slash'])
+        cached_response = self.get_from_cache('GET', cleaned_url)
+
+        if cached_response:
+            response = cached_response
+        else:
+            response = self._request('GET', cleaned_url, *args, **kwargs)
 
         self.validate_get_response(response)
         self.handle_get_response(response)
@@ -196,8 +185,7 @@ class ResourceEngine(object):
         # should this be handled by handle_get_response? i think probably.
         obj = self.obj_from_response(response)
 
-        obj._full_url = url
-
+        obj._full_url = cleaned_url
         return obj
 
     def validate_get_response(self, response):
@@ -218,6 +206,18 @@ class ResourceEngine(object):
         self.handle_response(response)
 
     # collection access methods
+
+    def get_collection_url(self, **kwargs):
+        """Generate a URL suitable for collection requests based on ``kwargs``
+
+        By default, this is the first valid collection URL.
+
+        :param kwargs: URL lookup variables
+        """
+
+        url = self._generate_url(url_type='collection', **kwargs)
+        return url
+
     def all(self):
         """Creates a get request to the API to the first collection URL with
         no parameters passed
@@ -231,7 +231,7 @@ class ResourceEngine(object):
 
         :param lookup_vars: variables to pass to _generate_url
         """
-        url = self._generate_url(url_type='collection', **lookup_vars)
+        url = self.get_collection_url(**lookup_vars)
         response = self._request('GET', url)
 
         self.validate_collection_response(response)
@@ -278,8 +278,10 @@ class ResourceEngine(object):
         if not url:
             raise ValueError('No update url found')
 
-        response = self._request(self.model._meta['update_method'], url,
-            data=self.serialize(resource_obj, for_read=True))
+        response = self._request(
+            self.model._meta['update_method'], url,
+            data=self.serialize(resource_obj, for_read=True)
+        )
 
         self.validate_update_response(response)
         return self.handle_update_response(response)
@@ -424,14 +426,8 @@ class ResourceEngine(object):
         Default handler for all response types. Ran as the last step in a
         request/response cycle
         """
-        if response.use_cache:
-            self.logger.debug("Setting response into cache for %s" % response.url)
-            # requests.Response is not easily cached, and contains things we
-            # don't need to remember. So let's cache a thin wrapper around
-            # its content
-            self.cache.set(response)
-
         self._tmp_request_args = {}
+        self.cache_response(response)
 
     def obj_from_response(self, response):
         """Update object's values to values of field_data
@@ -445,6 +441,39 @@ class ResourceEngine(object):
         obj._full_url = response.url
 
         return obj
+
+    def get_from_cache(self, request_method, url):
+        # Handle caching, unless skipped
+
+        if request_method not in self.model._meta['cached_methods']:
+            return
+
+        cache_key = self.cache.get_cache_key(
+            model=self.model,
+            url=url,
+        )
+        self.logger.debug("Trying to get cached response for %s" % cache_key)
+        cached_response = self.cache.get(cache_key)
+        if cached_response:
+            self.logger.debug("Got cached response for %s" % cache_key)
+
+            # Cached responses should not get re-cached to allow for
+            # expected timeouts. Now that we've retrieved the cached
+            # response, behave as if cache is turned off.
+            cached_response.use_cache = False
+            return cached_response
+
+    def cache_response(self, response):
+        if response.request_method not in self.model._meta['cached_methods']\
+                or not response.use_cache:
+            return
+
+        cache_key = self.cache.get_cache_key(
+            model=self.model,
+            url=response.url,
+        )
+
+        self.cache.set(cache_key, response)
 
     @property
     def logger(self):

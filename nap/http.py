@@ -4,14 +4,29 @@ import requests
 class NapResponse(object):
 
     def __init__(self, content, url, status_code,
-            use_cache=False, headers=None):
+            use_cache=None, headers=None, request_method=None):
         self.status_code = status_code
         self.content = content
         self.url = url
-        self.use_cache = use_cache
+        self._use_cache = use_cache
         if not headers:
             headers = {}
         self.headers = headers
+        self.request_method = request_method
+
+    @property
+    def use_cache(self):
+        """
+        use_cache must be explicitely set to False to bypass the cache.
+        This is usually done in the engine classes' get_from_cache method
+        """
+        if self._use_cache is False:
+            return False
+        return True
+
+    @use_cache.setter
+    def use_cache(self, val):
+        self._use_cache = val
 
 
 class NapRequest(object):

@@ -9,11 +9,9 @@ from .base import BaseCacheBackend
 
 class DjangoCacheBackend(BaseCacheBackend):
 
-    def get(self, response):
-        key = self.get_cache_key(response)
+    def get(self, key):
         return cache.get(key)
 
-    def set(self, response):
-        key = self.get_cache_key(response)
+    def set(self, key, value, response=None):
         timeout = self.get_timeout(response)
         return cache.set(key, response, timeout)

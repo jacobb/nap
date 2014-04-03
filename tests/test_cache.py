@@ -1,5 +1,6 @@
 import mock
 import pytest
+from . import SampleResourceModel
 
 from nap.cache.base import BaseCacheBackend, DEFAULT_TIMEOUT
 
@@ -43,10 +44,15 @@ class TestBaseCacheBackend(object):
 
     def test_get_cache_key(self):
 
-        mock_response = self.get_fake_response()
+        obj = SampleResourceModel(
+            title='expected_title',
+            content='Blank Content'
+        )
         cache_backend = self.get_backend()
-        key = cache_backend.get_cache_key(mock_response)
-        assert key == 'http://www.foo.com/bar/'
+
+        uri = SampleResourceModel.objects.get_lookup_url(resource_obj=obj)
+        key = cache_backend.get_cache_key(SampleResourceModel, uri)
+        assert key == 'note::http://foo.com/v1/::expected_title/'
 
     def test_get_timeout_from_header(self):
 

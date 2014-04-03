@@ -224,21 +224,27 @@ class TestResourceCollectionMethods(BaseResourceModelTest):
             engine.validate_collection_response(res)
 
 
+class TestCacheFunctions(object):
 
-class TestGetResultFromCache(object):
+    @mock.patch('requests.request')
+    @mock.patch('nap.cache.base.BaseCacheBackend.get')
+    def test_cached_result(self, *mocks):
 
-    def test_cached_result(self):
+        get = mocks[0]
+        req = mocks[1]
 
-        res_content = 'hello!'
+        res_content = json.dumps({'title': 'hello!'})
         cached_response = NapResponse(
             content=res_content,
             url='some-url/',
             status_code=200,
+            request_method='GET',
         )
-        with mock.patch('nap.cache.base.BaseCacheBackend.get') as get:
-            get.return_value = cached_response
-            res = SampleResourceModel.objects._request('GET', 'some-url/')
-            assert res == cached_response
+        get.return_value = cached_response
+        res = SampleResourceModel.objects.get_from_uri('some-url/')
+        assert res.full_url == "some-url/"
+        assert res.title == "hello!"
+        assert not req.called
 
     @mock.patch('nap.cache.base.BaseCacheBackend.get')
     @mock.patch('nap.cache.base.BaseCacheBackend.set')
@@ -253,9 +259,51 @@ class TestGetResultFromCache(object):
             url='some-url/',
             status_code=200,
             use_cache=True,
+            request_method='GET',
         )
         get.return_value = cached_response
         SampleResourceModel.objects.get_from_uri('some-url/')
+        assert not cache_set.called
+
+    @mock.patch('nap.engine.ResourceEngine._request')
+    @mock.patch('nap.cache.base.BaseCacheBackend.set')
+    def test_set_cache_from_response(self, *mocks):
+
+        cache_set = mocks[0]
+        req = mocks[1]
+
+        res_content = json.dumps({'title': 'hello!'})
+        response = NapResponse(
+            content=res_content,
+            url='some-url/',
+            status_code=200,
+            request_method='GET',
+        )
+        req.return_value = response
+        expected_cache_key = SampleResourceModel.objects.cache.get_cache_key(SampleResourceModel, response.url)
+        res = SampleResourceModel.objects.get_from_uri('some-url/')
+
+        cache_set.assert_called_with(expected_cache_key, response)
+
+    @mock.patch('nap.engine.ResourceEngine._request')
+    @mock.patch('nap.cache.base.BaseCacheBackend.set')
+    def test_set_cache_not_called(self, *mocks):
+
+        cache_set = mocks[0]
+        req = mocks[1]
+
+        res_content = json.dumps({'id': 1, 'title': 'hello!'})
+        response = NapResponse(
+            content=res_content,
+            url='some-url/',
+            status_code=204,
+            request_method='POST',
+        )
+        req.return_value = response
+        expected_cache_key = SampleResourceModel.objects.cache.get_cache_key(SampleResourceModel, response.url)
+        obj = SampleResourceModel(title='some-url/')
+        obj.save()
+
         assert not cache_set.called
 
 
