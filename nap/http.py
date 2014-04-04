@@ -20,9 +20,7 @@ class NapResponse(object):
         use_cache must be explicitely set to False to bypass the cache.
         This is usually done in the engine classes' get_from_cache method
         """
-        if self._use_cache is False:
-            return False
-        return True
+        return self._use_cache is not False
 
     @use_cache.setter
     def use_cache(self, val):

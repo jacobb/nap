@@ -14,4 +14,4 @@ class DjangoCacheBackend(BaseCacheBackend):
 
     def set(self, key, value, response=None):
         timeout = self.get_timeout(response)
-        return cache.set(key, response, timeout)
+        return cache.set(key, value, timeout)
