@@ -79,7 +79,7 @@ class TestResourceModelURLMethods(BaseResourceModelTest):
 
 class TestResourceEngineAccessMethods(BaseResourceModelTest):
 
-    def test_get_from_uri(self):
+    def test_get_from_uri(self, skip_cache=False):
 
         engine = self.get_engine()
         fake_dict = {
@@ -96,12 +96,24 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
             stubbed_response.status_code = 200
 
             get.return_value = stubbed_response
-            obj = engine.get_from_uri('xyz')
+            obj = engine.get_from_uri('xyz', skip_cache=skip_cache)
 
             assert obj.title == fake_dict['title']
             assert obj.content == fake_dict['content']
             assert obj._root_url == model_root_url
             assert obj._full_url == expected_url
+
+    @mock.patch('nap.engine.ResourceEngine.get_from_cache')
+    def test_get_from_uri_skip_cache(self, *mocks):
+
+        get_from_cache = mocks[0]
+        get_from_cache.return_value = None
+
+        self.test_get_from_uri(True)
+        assert not get_from_cache.called
+
+        self.test_get_from_uri()
+        assert get_from_cache.called
 
     def test_request_no_root_url(self):
         engine = self.get_engine()
@@ -128,7 +140,7 @@ class TestResourceEngineAccessMethods(BaseResourceModelTest):
         engine = self.get_engine()
         with mock.patch('nap.engine.ResourceEngine.get_from_uri') as get:
             engine.lookup(hello='hello_test', what='what_test')
-            get.assert_called_with('hello_test/what_test/')
+            get.assert_called_with('hello_test/what_test/', skip_cache=False)
 
         SampleResourceModel._lookup_urls = []
 

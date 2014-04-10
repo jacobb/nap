@@ -32,11 +32,10 @@ class BaseCacheBackend(object):
 
         key_parts = {
             'resource_name': resource_name,
-            'root_url': root_url,
             'url': url,
         }
 
-        cache_key = "%(resource_name)s::%(root_url)s::%(url)s" % key_parts
+        cache_key = "%(resource_name)s::%(url)s" % key_parts
 
         return cache_key
 

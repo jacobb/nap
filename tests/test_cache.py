@@ -51,8 +51,9 @@ class TestBaseCacheBackend(object):
         cache_backend = self.get_backend()
 
         uri = SampleResourceModel.objects.get_lookup_url(resource_obj=obj)
-        key = cache_backend.get_cache_key(SampleResourceModel, uri)
-        assert key == 'note::http://foo.com/v1/::expected_title/'
+        url = SampleResourceModel.objects.get_full_url(uri)
+        key = cache_backend.get_cache_key(SampleResourceModel, url)
+        assert key == "note::http://foo.com/v1/expected_title/"
 
     def test_get_timeout_from_header(self):
 

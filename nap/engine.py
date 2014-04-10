@@ -16,12 +16,8 @@ class ResourceEngine(object):
     def _request(self, request_method, url, *args, **kwargs):
         "Construct a NapRequest and send it via a requests.rest call"
 
-        try:
-            root_url = self.model._meta['root_url']
-        except KeyError:
-            raise ValueError("Nap requests require root_url to be defined")
+        full_url = self.get_full_url(url)
 
-        full_url = "%s%s" % (root_url, url)
         self.logger.info("Trying to hit %s" % full_url)
 
         request_args = self.get_request_args(kwargs)
@@ -38,8 +34,6 @@ class ResourceEngine(object):
             headers=resource_response.headers,
             content=resource_response.content,
             request_method=request_method,
-
-
         )
 
         for mw in reversed(self.model._meta['middleware']):
@@ -144,7 +138,7 @@ class ResourceEngine(object):
         return self._generate_url(url_type='update', resource_obj=resource_obj, **kwargs)
 
     # access methods
-    def get(self, uri=None, **kwargs):
+    def get(self, uri=None, skip_cache=False, **kwargs):
         """Issues a get request to the API. If ``uri`` is passed, will send a
         request directly to that URL. otherwise, attempt a lookup request.
 
@@ -154,11 +148,11 @@ class ResourceEngine(object):
         """
 
         if uri:
-            return self.get_from_uri(uri)
+            return self.get_from_uri(uri, skip_cache=skip_cache)
 
-        return self.lookup(**kwargs)
+        return self.lookup(skip_cache=skip_cache, **kwargs)
 
-    def lookup(self, **lookup_vars):
+    def lookup(self, skip_cache=False, **lookup_vars):
         """Creates a get request to the API to the first URL found based on
         ``lookup_vars``
 
@@ -166,13 +160,17 @@ class ResourceEngine(object):
         """
 
         uri = self.get_lookup_url(**lookup_vars)
-        return self.get_from_uri(uri)
+        return self.get_from_uri(uri, skip_cache=skip_cache)
 
-    def get_from_uri(self, url, *args, **kwargs):
+    def get_from_uri(self, url, skip_cache=False, *args, **kwargs):
         """instance method to perform all non-collection get requests
         """
         cleaned_url = handle_slash(url, self.model._meta['add_slash'])
-        cached_response = self.get_from_cache('GET', cleaned_url)
+
+        if skip_cache:
+            cached_response = None
+        else:
+            cached_response = self.get_from_cache('GET', cleaned_url)
 
         if cached_response:
             response = cached_response
@@ -448,9 +446,10 @@ class ResourceEngine(object):
         if request_method not in self.model._meta['cached_methods']:
             return
 
+        full_url = self.get_full_url(url)
         cache_key = self.cache.get_cache_key(
             model=self.model,
-            url=url,
+            url=full_url,
         )
         self.logger.debug("Trying to get cached response for %s" % cache_key)
         cached_response = self.cache.get(cache_key)
@@ -507,3 +506,12 @@ class ResourceEngine(object):
     @property
     def cache(self):
         return self.model._meta['cache_backend']
+
+    def get_full_url(self, uri):
+        try:
+            root_url = self.model._meta['root_url']
+        except KeyError:
+            raise ValueError("Nap requests require root_url to be defined")
+
+        full_url = "%s%s" % (root_url, uri)
+        return full_url
