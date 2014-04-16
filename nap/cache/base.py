@@ -14,7 +14,7 @@ class BaseCacheBackend(object):
     def get(self, key):
         return None
 
-    def set(self, key, value):
+    def set(self, key, value, response=None):
         return None
 
     def get_timeout_from_header(self, response):
@@ -28,7 +28,6 @@ class BaseCacheBackend(object):
     def get_cache_key(self, model, url):
 
         resource_name = model._meta['resource_name']
-        root_url = model._meta['root_url']
 
         key_parts = {
             'resource_name': resource_name,

@@ -292,10 +292,13 @@ class TestCacheFunctions(object):
             request_method='GET',
         )
         req.return_value = response
-        expected_cache_key = SampleResourceModel.objects.cache.get_cache_key(SampleResourceModel, response.url)
-        res = SampleResourceModel.objects.get_from_uri('some-url/')
+        expected_cache_key = SampleResourceModel.objects.cache.get_cache_key(
+            SampleResourceModel,
+            response.url,
+        )
+        SampleResourceModel.objects.get_from_uri('some-url/')
 
-        cache_set.assert_called_with(expected_cache_key, response)
+        cache_set.assert_called_with(expected_cache_key, response, response=response)
 
     @mock.patch('nap.engine.ResourceEngine._request')
     @mock.patch('nap.cache.base.BaseCacheBackend.set')

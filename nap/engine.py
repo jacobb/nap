@@ -472,7 +472,12 @@ class ResourceEngine(object):
             url=response.url,
         )
 
-        self.cache.set(cache_key, response)
+        # Cache backends are meant to possibly store more than just
+        # NapResponse objects, so if future features need to cache
+        # anything else it's possible.
+        # Thus, we pass response both as `value` and the response
+        # object
+        self.cache.set(cache_key, response, response=response)
 
     @property
     def logger(self):
