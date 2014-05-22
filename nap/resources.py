@@ -149,6 +149,16 @@ class ResourceModel(object):
 
         return obj_dict
 
+    @property
+    def cache_key(self):
+
+        # This really needs to be cleaned up
+        lookup_url = self.objects.get_lookup_url(self)
+        full_url = self.objects.get_full_url(lookup_url)
+        cache_key = self.objects.cache.get_cache_key(self.__class__, full_url)
+
+        return cache_key
+
     # properties
     @property
     def full_url(self):

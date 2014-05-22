@@ -138,6 +138,11 @@ class TestReourceEtcMethods(object):
         assert dm != dm3
         assert dm != object()
 
+    def test_cache_key_method(self):
+        dm = SampleResourceModel(slug='some-slug')
+
+        assert dm.cache_key == "note::http://foo.com/v1/note/some-slug/"
+
 
 class TestResourceAuth(object):
 
